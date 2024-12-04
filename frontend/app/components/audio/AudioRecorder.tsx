@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { Audio } from "expo-av";
 import { AudioWaveform } from "./AudioWaveform";
 import * as FileSystem from "expo-file-system";
+import { useTheme } from "@react-navigation/native";
 
 interface AudioRecorderProps {
   onRecordingComplete?: (uri: string) => void;
@@ -11,8 +12,11 @@ interface AudioRecorderProps {
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onRecordingComplete,
 }) => {
+  const { colors } = useTheme();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
     setupAudio();
@@ -42,8 +46,29 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       );
       setRecording(recording);
       setIsRecording(true);
+      setIsPaused(false);
     } catch (error) {
       console.error("Start recording failed:", error);
+    }
+  };
+
+  const pauseRecording = async () => {
+    if (!recording) return;
+    try {
+      await recording.pauseAsync();
+      setIsPaused(true);
+    } catch (error) {
+      console.error("Pause recording failed:", error);
+    }
+  };
+
+  const resumeRecording = async () => {
+    if (!recording) return;
+    try {
+      await recording.startAsync();
+      setIsPaused(false);
+    } catch (error) {
+      console.error("Resume recording failed:", error);
     }
   };
 
@@ -84,37 +109,116 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <AudioWaveform isRecording={isRecording} />
-      <TouchableOpacity
-        style={[styles.button, isRecording && styles.recordingButton]}
-        onPress={isRecording ? stopRecording : startRecording}
-      >
-        <Text style={styles.buttonText}>{isRecording ? "Stop" : "Record"}</Text>
-      </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <AudioWaveform isRecording={isRecording && !isPaused} />
+      <View style={styles.controlsContainer}>
+        {!isRecording ? (
+          <RecordButton onPress={startRecording} colors={colors} />
+        ) : (
+          <RecordingControls
+            isPaused={isPaused}
+            onPause={pauseRecording}
+            onResume={resumeRecording}
+            onStop={stopRecording}
+            colors={colors}
+          />
+        )}
+      </View>
     </View>
   );
 };
 
+interface ControlButtonProps {
+  onPress: () => void;
+  label: string;
+  color: string;
+  textColor?: string;
+}
+
+const ControlButton: React.FC<ControlButtonProps> = ({
+  onPress,
+  label,
+  color,
+  textColor = "#fff",
+}) => (
+  <TouchableOpacity
+    style={[styles.button, { backgroundColor: color }]}
+    onPress={onPress}
+  >
+    <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
+  </TouchableOpacity>
+);
+
+interface RecordButtonProps {
+  onPress: () => void;
+  colors: any;
+}
+
+const RecordButton: React.FC<RecordButtonProps> = ({ onPress, colors }) => (
+  <ControlButton onPress={onPress} label="Record" color={colors.primary} />
+);
+
+interface RecordingControlsProps {
+  isPaused: boolean;
+  onPause: () => void;
+  onResume: () => void;
+  onStop: () => void;
+  colors: any;
+}
+
+const RecordingControls: React.FC<RecordingControlsProps> = ({
+  isPaused,
+  onPause,
+  onResume,
+  onStop,
+  colors,
+}) => (
+  <>
+    {!isPaused ? (
+      <ControlButton
+        onPress={onPause}
+        label="Pause"
+        color={colors.notification}
+      />
+    ) : (
+      <ControlButton onPress={onResume} label="Resume" color={colors.primary} />
+    )}
+    <ControlButton
+      onPress={onStop}
+      label="End"
+      color={colors.error || "#f44336"}
+    />
+  </>
+);
+
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "center",
     padding: 20,
+    borderRadius: 10,
+    margin: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  controlsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 20,
   },
   button: {
-    backgroundColor: "#4CAF50",
     padding: 15,
-    borderRadius: 25,
-    width: 100,
+    borderRadius: 8,
+    minWidth: 100,
     alignItems: "center",
   },
-  recordingButton: {
-    backgroundColor: "#f44336",
-  },
   buttonText: {
-    color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });

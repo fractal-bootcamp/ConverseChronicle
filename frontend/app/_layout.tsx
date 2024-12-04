@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
+import { View } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Text } from "react-native";
@@ -82,11 +83,13 @@ export default function RootLayout() {
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
-          <AudioRecorder
-            onRecordingComplete={(uri) => {
-              console.log("Recording saved at:", uri);
-            }}
-          />
+          <View style={{ position: "absolute", bottom: 20, left: 0, right: 0 }}>
+            <AudioRecorder
+              onRecordingComplete={(uri) => {
+                console.log("Recording saved at:", uri);
+              }}
+            />
+          </View>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>
