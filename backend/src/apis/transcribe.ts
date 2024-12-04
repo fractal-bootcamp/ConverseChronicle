@@ -1,8 +1,6 @@
 import { createClient } from "@deepgram/sdk";
-import dotenv from "dotenv";
 
 export const transcribeUrl = async (url: string) => {
-    dotenv.config();
     const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
     const deepgram = createClient(deepgramApiKey);
 

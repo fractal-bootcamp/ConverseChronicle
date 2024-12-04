@@ -18,7 +18,6 @@ app.get('/recordings', (req: Request, res: Response) => {
 app.post('/recordings/:user_id/upload', async (req: Request, res: Response): Promise<any> => {
   const userId = req.params.user_id;
   const filename = req.body.filename;
-  console.log(req.body);
   if (!userId || !filename) {
     return res.status(400).json({ error: 'Recording filename and User Id can\'t be empty' });
   }

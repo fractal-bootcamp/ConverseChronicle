@@ -1,7 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // created sign url for frontend to upload audio file
 export const generatePresignedUrl = async (userId: string, filename: string): Promise<string> => {
