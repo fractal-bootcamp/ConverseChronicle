@@ -79,7 +79,7 @@ model SegmentTheme {
   theme_id   String
   theme      Theme   @relation(fields: [theme_id], references: [id])
 
-  @@id([segment_id, theme_id])
+  @@id([segment_id, theme_id]) //Use the combination of segment_id and theme_id as the unique identifier for each row
 }
 
 // manages participants in a conversation and when they appear
