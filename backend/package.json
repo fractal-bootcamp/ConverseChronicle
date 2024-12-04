@@ -5,7 +5,11 @@
 =======
     "@deepgram/sdk": "^3.9.0",
     "@supabase/supabase-js": "^2.46.2",
+<<<<<<< Updated upstream
 >>>>>>> c9db7f2 (Integrate deepgram API for transcribe and summary)
+=======
+    "@clerk/clerk-expo": "^2.3.12",
+>>>>>>> Stashed changes
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1"
