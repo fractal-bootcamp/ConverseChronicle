@@ -87,7 +87,7 @@ model User {
 model Conversation {
   id Int @id @default(autoincrement())
   title String
-  recording_address String
+  recording_url String
   transcript Json
   summary String
   themes String[]
