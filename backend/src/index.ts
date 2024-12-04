@@ -2,13 +2,10 @@ import express, {Request,  Response } from "express";
 import dotenv from "dotenv";
 import { createRecording } from './controllers';
 
-// Load .env file contents into process.env
 dotenv.config();
-
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(express.json());
 
 // list recordings
@@ -37,12 +34,12 @@ app.post('/recordings/:user_id/', async (req: Request, res: Response): Promise<a
     console.error(`Error while creating record:`, error);
     return res.status(500).json({ error: "Failed to transcribe recording" });
   }
-
 });
 
 app.delete('/recordings/:user_id/:recording_id', (req: Request, res: Response) => {
   res.send('delete one recording');
 });
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
