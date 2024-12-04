@@ -9,3 +9,17 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+}
+
+model Conversation {
+  id Int @id @default(autoincrement())
+  title String
+  recording_address String
+  transcript Json
+  summary String
+  themes String[]
+}
