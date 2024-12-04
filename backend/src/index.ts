@@ -1,6 +1,7 @@
 import express, {Request,  Response } from "express";
 import dotenv from "dotenv";
 import { createRecording } from './controllers';
+import { generatePresignedUrl } from "./apis/supabase";
 
 dotenv.config();
 const app = express();
@@ -13,11 +14,27 @@ app.get('/recordings', (req: Request, res: Response) => {
   res.send('get list of recordings');
 });
 
+// generate presigned url for audio upload
+app.post('/recordings/:user_id/upload', async (req: Request, res: Response): Promise<any> => {
+  const userId = req.params.user_id;
+  const filename = req.body.filename;
+  if (!userId || !filename) {
+    return res.status(400).json({ error: 'Recording filename and User Id can\'t be empty' });
+  }
+  try {
+    const signedUrl = await generatePresignedUrl(userId, filename);
+    return res.json({signedUrl});
+  } catch (error) {
+    console.error(`Error while generating signed url for audio upload:`, error);
+    return res.status(500).json({ error: "Failed to generate url" });
+  }
+});
+
 app.get('/recordings/:user_id/:recording_id', (req: Request, res: Response) => {
   res.send('get one recording');
 });
 
-app.post('/recordings/:user_id/', async (req: Request, res: Response): Promise<any> => {
+app.post('/recordings/:user_id', async (req: Request, res: Response): Promise<any> => {
   const recordingUrl = req.body.recording_url;
   const userId = req.params.user_id;
   if (!recordingUrl || !userId) {
