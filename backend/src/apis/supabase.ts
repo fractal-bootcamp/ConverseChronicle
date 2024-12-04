@@ -32,4 +32,5 @@ export const generatePresignedUrl = async () => {
     }
 
     const { signedUrl, token } = data;
+    return data;
 }
