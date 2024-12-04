@@ -1,25 +1,132 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// First, let's consider the core entities we need to track:
+
+// Users who create recordings
+// The recordings/conversations themselves
+// The processed elements from these conversations (themes, participants, segments)
+// The relationships between these elements
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  name String
+  id            String         @id @default(cuid())
+  clerk_id      String         @unique
+  name          String
+  conversations Conversation[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  Speaker       Speaker[]
 }
 
 model Conversation {
-  id Int @id @default(autoincrement())
-  title String
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user_id       String
+  user          User     @relation(fields: [user_id], references: [clerk_id])
+  title         String
   recording_url String
-  transcript Json
-  summary String
-  themes String[]
+  duration      Int
+  transcript    Json // Raw transcript JSON from service
+  summary       String
+
+  // Relations to analyzed elements
+  segments     Segment[]
+  themes       Theme[]
+  participants ConversationParticipant[]
 }
+
+model Speaker {
+  id          String                    @id @default(cuid())
+  created_at  DateTime                  @default(now())
+  updated_at  DateTime                  @updatedAt
+  name        String // The canonical name for this speaker
+  user_id     String? // Optional link if the speaker is a registered user
+  user        User?                     @relation(fields: [user_id], references: [id])
+  appearances ConversationParticipant[]
+}
+
+// Segments are meaningful chunks of the conversation that can be analyzed for themes, emotions, etc.
+model Segment {
+  id              String                  @id @default(cuid())
+  conversation_id String
+  conversation    Conversation            @relation(fields: [conversation_id], references: [id])
+  participant_id  String // the Segment model should maintain its own reference to which participant was speaking
+  participant     ConversationParticipant @relation(fields: [participant_id], references: [id])
+  start_time      Float // Time in seconds
+  end_time        Float
+  text            String // The actual segment content
+  themes          SegmentTheme[]
+}
+
+// The high-level topics or themes that emerge from the conversation
+model Theme {
+  id              String         @id @default(cuid())
+  name            String
+  conversation_id String
+  conversation    Conversation   @relation(fields: [conversation_id], references: [id])
+  segments        SegmentTheme[]
+  //confidence      Float?    // How confident we are in this theme assignment
+}
+
+// This is a many-to-many relationship between segments and themes
+// a list of connections between segments and themes
+model SegmentTheme {
+  segment_id String
+  segment    Segment @relation(fields: [segment_id], references: [id])
+  theme_id   String
+  theme      Theme   @relation(fields: [theme_id], references: [id])
+
+  @@id([segment_id, theme_id])
+}
+
+model ConversationParticipant {
+  id              String       @id @default(cuid())
+  conversation_id String
+  conversation    Conversation @relation(fields: [conversation_id], references: [id])
+
+  // This can start as null and be filled in when the user identifies the speaker
+  speaker_id String?
+  speaker    Speaker? @relation(fields: [speaker_id], references: [id])
+
+  // The temporary label used before speaker identification (e.g., "Speaker 1")
+  temporary_label String
+
+  // When this participant was identified by the user
+  identified_at DateTime?
+
+  // The segments where this participant speaks
+  segments Segment[]
+}
+
+// the schema should support queries like this:
+
+// Find all segments for a theme in a conversation
+// const themeSegments = await prisma.theme.findUnique({
+//   where: { id: themeId },
+//   include: {
+//     segments: {
+//       include: {
+//         segment: true
+//       }
+//     }
+//   }
+// });
+
+// Find all themes discussed by a specific speaker
+// const speakerThemes = await prisma.segment.findMany({
+//   where: { speaker: speakerId },
+//   include: {
+//     themes: {
+//       include: {
+//         theme: true
+//       }
+//     }
+//   }
+// });
