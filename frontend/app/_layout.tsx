@@ -15,6 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Text } from "react-native";
+import { AudioRecorder } from "@/app/components/audio/AudioRecorder";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -81,6 +82,11 @@ export default function RootLayout() {
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
+          <AudioRecorder
+            onRecordingComplete={(uri) => {
+              console.log("Recording saved at:", uri);
+            }}
+          />
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>

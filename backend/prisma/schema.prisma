@@ -2,10 +2,79 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id         String      @id @default(uuid())
+    email      String      @unique
+    name       String?
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+    recordings Recording[]
+    Folder     Folder[]
+    Comment    Comment[]
+}
+
+model Recording {
+    id          String      @id @default(uuid())
+    title       String
+    description String?
+    audioUrl    String // URL to stored audio file
+    duration    Int // Duration in seconds
+    fileSize    Int // Size in bytes
+    fileFormat  String // e.g., mp3, wav
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    userId      String
+    user        User        @relation(fields: [userId], references: [id])
+    transcript  Transcript?
+    tags        Tag[]
+    status      String      @default("PENDING")
+    folderId    String?
+    folder      Folder?     @relation(fields: [folderId], references: [id])
+    comments    Comment[]
+}
+
+model Transcript {
+    id           String    @id @default(uuid())
+    fullText     String // Complete transcription
+    summary      String // AI-generated summary
+    bulletPoints String // JSON string of bullet points
+    sentiment    String? // Optional sentiment analysis
+    keywords     String // JSON string of keywords
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    recordingId  String    @unique
+    recording    Recording @relation(fields: [recordingId], references: [id])
+}
+
+model Tag {
+    id         String      @id @default(uuid())
+    name       String      @unique
+    recordings Recording[]
+}
+
+model Folder {
+    id         String      @id @default(uuid())
+    name       String
+    userId     String
+    user       User        @relation(fields: [userId], references: [id])
+    recordings Recording[]
+}
+
+model Comment {
+    id          String    @id @default(uuid())
+    text        String
+    timestamp   Int // Position in audio (seconds)
+    recordingId String
+    recording   Recording @relation(fields: [recordingId], references: [id])
+    userId      String
+    user        User      @relation(fields: [userId], references: [id])
+    createdAt   DateTime  @default(now())
 }
