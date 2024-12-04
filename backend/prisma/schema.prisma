@@ -78,3 +78,17 @@ model Comment {
     user        User      @relation(fields: [userId], references: [id])
     createdAt   DateTime  @default(now())
 }
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+}
+
+model Conversation {
+  id Int @id @default(autoincrement())
+  title String
+  recording_address String
+  transcript Json
+  summary String
+  themes String[]
+}
