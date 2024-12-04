@@ -32,7 +32,7 @@ export default function Page() {
       ]}
     >
       <LottieView
-        source={require("@/assets/animations/background-sparkles.json")}
+        source={require("../../assets/animations/background-sparkles.json")}
         autoPlay
         loop
         style={styles.backgroundAnimation}
