@@ -1,153 +1,153 @@
-import React, { useEffect } from "react";
-import { SignedIn, SignedOut, useUser, useAuth } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
-import { Button, Text, View, StyleSheet, Animated, Easing } from "react-native";
-import LottieView from "lottie-react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useUser, useAuth } from "@clerk/clerk-expo";
+import { router } from "expo-router";
+import { useTheme } from "@react-navigation/native";
 
-export default function Page() {
+export default function HomePage() {
   const { user } = useUser();
   const { signOut } = useAuth();
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.5);
+  const { colors } = useTheme();
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 4,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const rotateAnim = fadeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace("/(auth)");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
-      ]}
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <LottieView
-        source={require("@/assets/animations/background-sparkles.json")}
-        autoPlay
-        loop
-        style={styles.backgroundAnimation}
-      />
-      <SignedIn>
-        <Animated.View
-          style={[
-            styles.signedInContainer,
-            { transform: [{ rotate: rotateAnim }] },
-          ]}
-        >
-          <Text style={styles.greeting}>
-            Welcome back, {user?.emailAddresses[0]?.emailAddress}!
-          </Text>
-          {/* <LottieView
-            source={require("../../assets/animations/celebration.json")}
-            autoPlay
-            loop
-            style={styles.celebrationAnimation}
-          /> */}
-          <Button
-            title="Sign Out"
-            onPress={() => {
-              Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-              }).start(() => signOut());
-            }}
-            color="#FF6347"
-          />
-        </Animated.View>
-      </SignedIn>
-      <SignedOut>
-        <View style={styles.signedOutContainer}>
-          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-            <Link href="/sign-in" style={styles.link}>
-              <Text style={styles.linkText}>Sign In</Text>
-            </Link>
-          </Animated.View>
-          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-            <Link href="/sign-up" style={styles.link}>
-              <Text style={styles.linkText}>Sign Up</Text>
-            </Link>
-          </Animated.View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.welcomeText, { color: colors.text }]}>
+              Welcome back, {user?.firstName || "User"}!
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.signOutButton,
+                { backgroundColor: colors.primary },
+              ]}
+              onPress={handleSignOut}
+            >
+              <Text style={[styles.signOutText, { color: colors.card }]}>
+                Sign Out
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </SignedOut>
-    </Animated.View>
+
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>
+            Your Daily Summary
+          </Text>
+          <Text style={[styles.cardText, { color: colors.text }]}>
+            Here's what's new today...
+          </Text>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>
+            Quick Actions
+          </Text>
+          <View
+            style={[styles.actionItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={{ color: colors.text }}>🎯 Complete your profile</Text>
+          </View>
+          <View
+            style={[styles.actionItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={{ color: colors.text }}>📝 Add a new task</Text>
+          </View>
+          <View
+            style={[styles.actionItem, { borderBottomColor: colors.border }]}
+          >
+            <Text style={{ color: colors.text }}>📊 View your statistics</Text>
+          </View>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>
+            Recent Activity
+          </Text>
+          <Text style={[styles.cardText, { color: colors.text }]}>
+            No recent activity to show.
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF",
   },
-  backgroundAnimation: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
+  scrollContent: {
+    padding: 16,
   },
-  signedInContainer: {
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  greeting: {
-    fontSize: 24,
+  header: {
     marginBottom: 20,
-    fontWeight: "bold",
-    color: "#333",
   },
-  celebrationAnimation: {
-    width: 200,
-    height: 200,
-  },
-  signedOutContainer: {
+  headerRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "80%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
-  link: {
-    padding: 15,
-    backgroundColor: "#4CAF50",
-    borderRadius: 25,
-    margin: 10,
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    fontFamily: "SpaceMono",
+  },
+  signOutButton: {
+    alignSelf: "flex-end",
+    backgroundColor: "#FF6B6B",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  signOutText: {
+    fontWeight: "bold",
+    fontFamily: "SpaceMono",
+  },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  linkText: {
-    color: "white",
-    fontWeight: "bold",
+  cardTitle: {
     fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+    fontFamily: "SpaceMono",
+  },
+  cardText: {
+    fontSize: 16,
+    fontFamily: "SpaceMono",
+  },
+  actionItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
   },
 });
