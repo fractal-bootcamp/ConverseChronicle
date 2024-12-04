@@ -1,0 +1,16 @@
+{
+  "name": "conversechronicle",
+  "version": "1.0.0",
+  "description": "An app for recording your conversations and summarising their content and relevant information",
+  "main": "babel.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-plugin-module-resolver": "^5.0.2",
+    "typescript": "^5.3.3"
+  }
+}
