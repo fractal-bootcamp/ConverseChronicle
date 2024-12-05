@@ -2,18 +2,28 @@ import express, {Request,  Response } from "express";
 import dotenv from "dotenv";
 import { createRecording, deleteRecording, getRecording, listRecordings, updateRecording } from './controllers';
 import { generatePresignedUrl } from "./apis/supabase";
+import { 
+  clerkClient,
+  clerkMiddleware,
+  getAuth,
+  requireAuth, 
+} from "@clerk/express";
 
 dotenv.config();
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(clerkMiddleware());
 
 // list recordings
-app.get('/recordings/:user_id', async (req: Request, res: Response): Promise<any> => {
-  const {user_id} = req.params;
+app.get('/recordings/', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+  const {userId} = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
   try {
-    const recordingsInfo = await listRecordings({userId: user_id});
+    const recordingsInfo = await listRecordings({userId});
     return res.json(recordingsInfo);
   } catch(error) {
     console.error(`Error while retrieving conversations:`, error);
@@ -22,10 +32,13 @@ app.get('/recordings/:user_id', async (req: Request, res: Response): Promise<any
 });
 
 // generate presigned url for audio upload
-app.post('/recordings/:user_id/upload', async (req: Request, res: Response): Promise<any> => {
-  const userId = req.params.user_id;
+app.post('/recordings/upload', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+  const {userId} = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
   const filename = req.body.filename;
-  if (!userId || !filename) {
+  if (!filename) {
     return res.status(400).json({ error: 'Recording filename and User Id can\'t be empty' });
   }
   try {
