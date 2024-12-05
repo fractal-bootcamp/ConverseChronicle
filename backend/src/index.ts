@@ -8,6 +8,7 @@ import {
   getAuth,
   requireAuth, 
 } from "@clerk/express";
+import { GetRequest, ListRequest, DeleteRequest, UpdateRequest, CreateRequest } from "./model";
 
 dotenv.config();
 const app = express();
@@ -24,7 +25,11 @@ app.get('/recordings/', requireAuth(), async (req: Request, res: Response): Prom
   }
   try {
     const recordingsInfo = await listRecordings({userId});
-    return res.json(recordingsInfo);
+    return res.status(200).json({
+        success: true,
+        data: recordingsInfo,
+        message: "Conversations retrieved successfully"
+    });
   } catch(error) {
     console.error(`Error while retrieving conversations:`, error);
     return res.status(500).json({ error: "Failed to retrieve conversations" });
@@ -37,13 +42,17 @@ app.post('/recordings/upload', requireAuth(), async (req: Request, res: Response
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const filename = req.body.filename;
+  const filename = `recording_${Date.now()}`;
   if (!filename) {
     return res.status(400).json({ error: 'Recording filename and User Id can\'t be empty' });
   }
   try {
     const signedUrl = await generatePresignedUrl(userId, filename);
-    return res.json({signedUrl});
+    return res.status(200).json({
+        success: true,
+        data: { signedUrl },
+        message: "Signed URL generated successfully"
+    });
   } catch (error) {
     console.error(`Error while generating signed url for audio upload:`, error);
     return res.status(500).json({ error: "Failed to generate url" });
@@ -51,21 +60,29 @@ app.post('/recordings/upload', requireAuth(), async (req: Request, res: Response
 });
 
 // get single recording
-app.get('/recordings/:user_id/:recording_id', async (req: Request, res: Response): Promise<any> => {
-  const {user_id, recording_id} = req.params;
-  if (!user_id || !recording_id) {
-    return res.status(400).json({ error: 'Recording Id and User Id can\'t be empty' });
+app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+  const {userId} = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
-  const getRequest = {
-    userId: user_id,
-    recordingId: recording_id
+  const recordingId = req.params.recording_id;
+  if (!recordingId) {
+    return res.status(400).json({ error: "Recording Id can't be empty" });
+  }
+  const getRequest: GetRequest = {
+    userId,
+    recordingId
   }
   try {
     const recording = await getRecording(getRequest);
     if (!recording) {
-      return res.status(404).json({ error: `Recording ${recording_id} not found` });
+      return res.status(404).json({ error: `Recording ${recordingId} not found` });
     }
-    return res.json(recording);
+    return res.status(200).json({
+        success: true,
+        data: recording,
+        message: "Recording retrieved successfully"
+    });
   } catch (error) {
     console.error(`Error while getting recording:`, error);
     return res.status(500).json({ error: "Failed to get recording" });
