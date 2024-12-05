@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -11,29 +11,30 @@ datasource db {
 }
 
 model User {
-  id String @id @default(cuid())
-  name String
+  id            String         @id @default(cuid())
+  clerkId       String         @unique
+  name          String
   conversations Conversation[]
 }
 
 model Conversation {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  title String
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [clerkId])
+  title         String
   recording_url String
-  file_path String
-  transcript String
-  summary String
-  duration Int
-  topics Topic[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt 
+  file_path     String
+  transcript    String
+  summary       String
+  duration      Int
+  topics        Topic[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Topic {
-  id String @id @default(cuid())
-  topic String
+  id             String       @id @default(cuid())
+  topic          String
   conversationId String
-  conversation Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
