@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+} from "react-native";
 import { Audio } from "expo-av";
 import { AudioWaveform } from "./AudioWaveform";
 import * as FileSystem from "expo-file-system";
 import { useTheme } from "@react-navigation/native";
 
+interface Marker {
+  timestamp: number;
+  label: string;
+}
 interface AudioRecorderProps {
   onRecordingComplete?: (uri: string) => void;
 }
@@ -13,6 +24,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onRecordingComplete,
 }) => {
   const { colors } = useTheme();
+  const [timer, setTimer] = useState<number>(0);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -26,6 +38,20 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording && !isPaused) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev + 100);
+      }, 100);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRecording, isPaused]);
 
   const setupAudio = async () => {
     try {
@@ -41,6 +67,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const startRecording = async () => {
     try {
+      setTimer(0);
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
@@ -108,9 +135,24 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   };
 
+  const formatTime = (milliseconds: number): string => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const ms = milliseconds % 1000;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}.${Math.floor(
+      ms / 100
+    )}`;
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
-      <AudioWaveform isRecording={isRecording && !isPaused} />
+      <AudioWaveform
+        isRecording={isRecording && !isPaused}
+        time={isRecording ? formatTime(timer) : undefined}
+        bpm={120}
+        offset="00:00:00:00"
+      />
       <View style={styles.controlsContainer}>
         {!isRecording ? (
           <RecordButton onPress={startRecording} colors={colors} />
@@ -155,7 +197,12 @@ interface RecordButtonProps {
 }
 
 const RecordButton: React.FC<RecordButtonProps> = ({ onPress, colors }) => (
-  <ControlButton onPress={onPress} label="Record" color={colors.primary} />
+  <ControlButton
+    onPress={onPress}
+    label="Record"
+    color="rgba(0, 0, 0, 0.8)"
+    textColor={colors.primary}
+  />
 );
 
 interface RecordingControlsProps {
@@ -178,15 +225,22 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
       <ControlButton
         onPress={onPause}
         label="Pause"
-        color={colors.notification}
+        color="rgba(0, 0, 0, 0.8)"
+        textColor={colors.notification}
       />
     ) : (
-      <ControlButton onPress={onResume} label="Resume" color={colors.primary} />
+      <ControlButton
+        onPress={onResume}
+        label="Resume"
+        color="rgba(0, 0, 0, 0.8)"
+        textColor={colors.primary}
+      />
     )}
     <ControlButton
       onPress={onStop}
       label="End"
-      color={colors.error || "#f44336"}
+      color="rgba(0, 0, 0, 0.8)"
+      textColor={colors.error || "#f44336"}
     />
   </>
 );
@@ -216,9 +270,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minWidth: 100,
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 1,
+    color: "#fff",
+  },
+  timeDisplayContainer: {
+    borderWidth: 2,
+    borderRadius: 8,
+    padding: 5,
+    marginVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timeDisplayText: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
 });
