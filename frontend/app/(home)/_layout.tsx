@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router"; // import navigation
 import { Ionicons } from "@expo/vector-icons";
+import { AppHeader } from "@/app/components/AppHeader";
 
 // main layout for the home screen
 export default function HomeLayout() {
@@ -9,6 +10,18 @@ export default function HomeLayout() {
       screenOptions={{
         tabBarActiveTintColor: "#007AFF",
         headerShown: true,
+        headerRight: () => <AppHeader title="" />,
+        headerStyle: {
+          height: 120,
+        },
+        headerTitleStyle: {
+          fontSize: 20,
+        },
+        tabBarStyle: {
+          height: 95, // Increased height from default ~50
+          paddingBottom: 10, // Add some padding at bottom for comfort
+          paddingTop: 15, // Add some padding at top
+        },
       }}
     >
       {/* record screen here */}
