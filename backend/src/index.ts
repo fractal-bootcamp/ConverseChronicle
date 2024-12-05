@@ -2,8 +2,7 @@ import express, {Request,  Response } from "express";
 import dotenv from "dotenv";
 import { createRecording, deleteRecording, getRecording, listRecordings, updateRecording } from './controllers';
 import { generatePresignedUrl } from "./apis/supabase";
-import { 
-  clerkClient,
+import {
   clerkMiddleware,
   getAuth,
   requireAuth, 
@@ -90,19 +89,23 @@ app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
 });
 
 // create recording
-app.post('/recordings/:user_id', async (req: Request, res: Response): Promise<any> => {
+app.post('/recordings/create', requireAuth(), async (req: Request, res: Response): Promise<any> => {
   const recordingUrl = req.body.recording_url;
-  const userId = req.params.user_id;
+  const {userId} = getAuth(req);
   if (!recordingUrl || !userId) {
     return res.status(400).json({ error: 'Recording URL and User Id can\'t be empty' });
   };
-  const createRequest = {
+  const createRequest: CreateRequest = {
     recordingUrl: req.body.recording_url,
     userId: req.params.user_id
   }
   try {
     const response = await createRecording(createRequest);
-    return res.json(response);
+    return res.status(200).json({
+        success: true,
+        data: response,
+        message: "Recording created successfully"
+    });
   } catch (error) {
     console.error(`Error while creating record:`, error);
     return res.status(500).json({ error: "Failed to transcribe recording" });
@@ -110,18 +113,29 @@ app.post('/recordings/:user_id', async (req: Request, res: Response): Promise<an
 });
 
 // delete recording
-app.delete('/recordings/:user_id/:recording_id', async (req: Request, res: Response): Promise<any> => {
-  const {user_id, recording_id} = req.params;
-  if (!user_id || !recording_id) {
-    return res.status(400).json({ error: 'Recording Id and User Id can\'t be empty' });
+app.delete('/recordings/:recording_id', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+  const {userId} = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
-
+  const recordingId = req.params.recording_id;
+  if (!recordingId) {
+    return res.status(400).json({ error: "Recording Id can't be empty" });
+  }
+  const deleteRequest: DeleteRequest = {
+    userId,
+    recordingId
+  }
   try {
-    const result = await deleteRecording({
-      userId: user_id,
-      recordingId: recording_id
+    const deleted = await deleteRecording(deleteRequest);
+    if (!deleted) {
+      return res.status(404).json({ error: `Recording ${recordingId} not found` });
+    }
+    console.log('deleted recording', deleted);
+    return res.status(200).json({
+        success: true,
+        message: "Recording deleted successfully"
     });
-    return res.status(200).json({message: "successfully deleted conversation"});
   } catch (error: any) {
     if (error.code === 'P2025') {
       console.error('Error: The record you tried to delete does not exist.');
@@ -133,24 +147,35 @@ app.delete('/recordings/:user_id/:recording_id', async (req: Request, res: Respo
   }
 });
 
-app.put('/recordings/:user_id/:recording_id', async (req: Request, res: Response): Promise<any> => {
-  const {user_id, recording_id} = req.params;
+// update recording
+app.put('/recordings/:recording_id', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+  const {userId} = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const recordingId = req.params.recording_id;
   const {title, transcript} = req.body;
-  if (!user_id || !recording_id) {
+  if (!recordingId) {
     return res.status(400).json({ error: 'Recording Id and User Id can\'t be empty' });
   }
   if (!title || !transcript) {
     return res.status(400).json({ error: 'Title and transcript can\'t be empty' });
   }
-
+  const updateRequest: UpdateRequest = {
+    userId,
+    recordingId,
+    title,
+    transcript
+  }
   try {
-    const result = await updateRecording({
-      userId: user_id,
-      recordingId: recording_id,
-      title,
-      transcript
+    const updated = await updateRecording(updateRequest);
+    if (!updated) {
+      return res.status(404).json({ error: `Recording ${recordingId} not found` });
+    }
+    return res.status(200).json({
+        success: true,
+        message: "Recording updated successfully"
     });
-    return res.status(200).json({message: "successfully updated conversation"});
   } catch (error: any) {
     if (error.code === 'P2025') {
       console.error('Error: The record you tried to update does not exist.');

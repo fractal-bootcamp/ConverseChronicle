@@ -20,7 +20,7 @@ model User {
 model Conversation {
   id            String   @id @default(cuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [clerkId])
   title         String
   recording_url String
   file_path     String
