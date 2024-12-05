@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@clerk/clerk-expo": "^2.3.12",
     "@deepgram/sdk": "^3.9.0",
+    "@prisma/client": "^6.0.1",
     "@supabase/supabase-js": "^2.46.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

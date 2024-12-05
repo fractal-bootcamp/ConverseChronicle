@@ -11,6 +11,8 @@ import {
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter, Link } from "expo-router";
 import LottieView from "lottie-react-native";
+// import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 
