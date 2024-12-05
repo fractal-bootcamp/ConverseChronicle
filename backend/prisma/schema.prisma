@@ -12,6 +12,7 @@ datasource db {
 
 model User {
 <<<<<<< HEAD
+<<<<<<< HEAD
   id String @id @default(cuid())
   name String
   conversations Conversation[]
@@ -46,28 +47,29 @@ model Topic {
     recordings Recording[]
     Folder     Folder[]
     Comment    Comment[]
+=======
+  id String @id @default(cuid())
+  name String
+  conversations Conversation[]
+>>>>>>> 59953bb (Implement APIs + db operations)
 }
 
-model Recording {
-    id          String      @id @default(uuid())
-    title       String
-    description String?
-    audioUrl    String // URL to stored audio file
-    duration    Int // Duration in seconds
-    fileSize    Int // Size in bytes
-    fileFormat  String // e.g., mp3, wav
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @updatedAt
-    userId      String
-    user        User        @relation(fields: [userId], references: [id])
-    transcript  Transcript?
-    tags        Tag[]
-    status      String      @default("PENDING")
-    folderId    String?
-    folder      Folder?     @relation(fields: [folderId], references: [id])
-    comments    Comment[]
+model Conversation {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  title String
+  recording_url String
+  file_path String
+  transcript String
+  summary String
+  duration Int
+  topics Topic[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
 }
 
+<<<<<<< HEAD
 model Transcript {
     id           String    @id @default(uuid())
     fullText     String // Complete transcription
@@ -105,4 +107,11 @@ model Comment {
     user        User      @relation(fields: [userId], references: [id])
     createdAt   DateTime  @default(now())
 >>>>>>> 7fde5fa (Added buttons for recording)
+=======
+model Topic {
+  id String @id @default(cuid())
+  topic String
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+>>>>>>> 59953bb (Implement APIs + db operations)
 }
