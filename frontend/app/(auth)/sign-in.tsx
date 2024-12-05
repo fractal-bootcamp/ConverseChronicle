@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter, Link } from "expo-router";
-// import LottieView from "lottie-react-native";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottieView from "lottie-react-native";
+// import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
@@ -61,9 +61,9 @@ export default function SignInScreen() {
         { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
       ]}
     >
-      <DotLottieReact
-        src={require("@/assets/animations/gradient1.lottie")}
-        autoplay
+      <LottieView
+        source={require("@/assets/animations/background-sparkles.json")}
+        autoPlay
         loop
         style={styles.backgroundAnimation}
       />
