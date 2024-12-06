@@ -1,9 +1,8 @@
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from "dotenv";
 import { BUCKET_NAME } from '../constant';
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_API_KEY;
