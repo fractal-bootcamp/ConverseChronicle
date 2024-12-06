@@ -1,7 +1,6 @@
 import express, {Request,  Response } from "express";
 import dotenv from "dotenv";
 import { createRecording, deleteRecording, getRecording, listRecordings, updateRecording } from './controllers';
-import { generatePresignedUrl } from "./apis/supabase";
 import {
   clerkMiddleware,
   getAuth,
@@ -37,29 +36,6 @@ app.get('/recordings/', requireAuth(), async (req: Request, res: Response): Prom
   }
 });
 
-// generate presigned url for audio upload
-app.post('/recordings/upload', requireAuth(), async (req: Request, res: Response): Promise<any> => {
-  const {userId} = getAuth(req);
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const filename = `recording_${Date.now()}`;
-  if (!filename) {
-    return res.status(400).json({ error: 'Recording filename and User Id can\'t be empty' });
-  }
-  try {
-    const signedUrl = await generatePresignedUrl(userId, filename);
-    return res.status(200).json({
-        success: true,
-        data: { signedUrl },
-        message: "Signed URL generated successfully"
-    });
-  } catch (error) {
-    console.error(`Error while generating signed url for audio upload:`, error);
-    return res.status(500).json({ error: "Failed to generate url" });
-  }
-});
-
 // get single recording
 app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Response): Promise<any> => {
   const {userId} = getAuth(req);
@@ -92,14 +68,14 @@ app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
 
 // create recording
 app.post('/recordings/create', requireAuth(), async (req: Request, res: Response): Promise<any> => {
-  const recordingUrl = req.body.recording_url;
+  const recordingBody = req.body.recordingBody;
   const {userId} = getAuth(req);
-  if (!recordingUrl || !userId) {
-    return res.status(400).json({ error: 'Recording URL and User Id can\'t be empty' });
+  if (!recordingBody || !userId) {
+    return res.status(400).json({ error: 'Recording body and User Id can\'t be empty' });
   };
   const createRequest: CreateRequest = {
-    recordingUrl: req.body.recording_url,
-    userId: req.params.user_id
+    buffer: recordingBody,
+    userId: userId
   }
   try {
     const response = await createRecording(createRequest);
@@ -121,18 +97,12 @@ app.delete('/recordings/:recording_id', requireAuth(), async (req: Request, res:
     return res.status(401).json({ error: "Unauthorized" });
   }
   const recordingId = req.params.recording_id;
-  if (!recordingId) {
-    return res.status(400).json({ error: "Recording Id can't be empty" });
-  }
   const deleteRequest: DeleteRequest = {
     userId,
     recordingId
   }
   try {
     const deleted = await deleteRecording(deleteRequest);
-    if (!deleted) {
-      return res.status(404).json({ error: `Recording ${recordingId} not found` });
-    }
     console.log('deleted recording', deleted);
     return res.status(200).json({
         success: true,
@@ -142,10 +112,10 @@ app.delete('/recordings/:recording_id', requireAuth(), async (req: Request, res:
     if (error.code === 'P2025') {
       console.error('Error: The record you tried to delete does not exist.');
       return res.status(400).json({ error: "The conversation you tried to delete does not exist" });
-    } else {
-      console.error(`Error while deleting recording:`, error);
-      return res.status(500).json({ error: "Failed to delete recording" });
     }
+    console.error(`Error while deleting recording:`, error);
+    return res.status(500).json({ error: "Failed to delete recording" });
+    
   }
 });
 
@@ -182,10 +152,9 @@ app.put('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
     if (error.code === 'P2025') {
       console.error('Error: The record you tried to update does not exist.');
       return res.status(400).json({ error: "The conversation you tried to update does not exist" });
-    } else {
-      console.error(`Error while updating recording:`, error);
-      return res.status(500).json({ error: "Failed to update recording" });
-    }
+    } 
+    console.error(`Error while updating recording:`, error);
+    return res.status(500).json({ error: "Failed to update recording" });
   }
 });
 
@@ -193,3 +162,25 @@ app.put('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
+// Deprecated
+// generate presigned url for audio upload
+// app.post('/recordings/upload', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+//   const {userId} = getAuth(req);
+//   if (!userId) {
+//     return res.status(401).json({ error: "Unauthorized" });
+//   }
+//   const filename = `recording_${Date.now()}`;
+//   try {
+//     const signedUrl = await generatePresignedUrl(userId, filename);
+//     return res.status(200).json({
+//         success: true,
+//         data: { signedUrl },
+//         message: "Signed URL generated successfully"
+//     });
+//   } catch (error) {
+//     console.error(`Error while generating signed url for audio upload:`, error);
+//     return res.status(500).json({ error: "Failed to generate url" });
+//   }
+// });
