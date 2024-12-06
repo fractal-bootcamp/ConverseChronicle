@@ -32,7 +32,6 @@ export const transcribeFile = async (audioBuffer: Buffer) => {
       smart_format: true,
       }
   );
-  
   if (error) throw error;
   return processResult(result);
 }
@@ -47,13 +46,14 @@ export interface TranscribeResponse {
 const processResult = (result: SyncPrerecordedResponse) => {
   const transcript = result.results.channels[0].alternatives[0].paragraphs?.transcript || result.results.channels[0].alternatives[0].transcript;
   const {summary, topics, intents} = result.results
-  const shortSummary = summary?.short;
+  const shortSummary = summary?.short || "";
   const allTopics = topics?.segments.flatMap(segment => 
     segment.topics?.map(topicObj => topicObj.topic) || []
-  );
+  ) ?? [];
   const allIntents = intents?.segments.flatMap((segment) => 
     segment.intents?.map((intentObj)=> intentObj.intent) || []
-  );
+  )?? [];
+  console.log(`transcript`, transcript);
   return {
       transcript,
       shortSummary,

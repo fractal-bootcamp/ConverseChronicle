@@ -10,17 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String         @id @default(cuid())
-  clerkId       String         @unique
-  name          String
-  conversations Conversation[]
-}
+// model User {
+//   id            String         @id @default(cuid())
+//   clerkId       String         @unique
+//   name          String
+//   conversations Conversation[]
+// }
 
 model Conversation {
   id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [clerkId])
+  userId        String   //clerk_id
+  // userId        String
+  // user          User     @relation(fields: [userId], references: [clerkId])
   title         String
   recording_url String
   file_path     String
