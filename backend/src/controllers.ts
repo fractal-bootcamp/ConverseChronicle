@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { transcribeFile, transcribeUrl } from "./apis/transcribe";
+import { transcribeUrl } from "./apis/transcribe";
 import { CreateRequest, GetRequest, ListRequest, DeleteRequest, UpdateRequest } from "./model";
 import { downloadFile, uploadBuffer } from './apis/supabase';
 import { v4 as uuid } from 'uuid';
@@ -19,6 +19,7 @@ export const createRecording = async(req: CreateRequest) => {
     // upload audio to supabase storage
     if (buffer) {
         const {id, path, fullPath} = await uploadBuffer(BUCKET_NAME, filePath, buffer, "audio/x-m4a");
+        console.log('uploaded buffer', id, path, fullPath);
     }
     // save record to db
     const newRecording = await prisma.conversation.create({
@@ -32,9 +33,11 @@ export const createRecording = async(req: CreateRequest) => {
             topics: {}, // todo: how to make [topic, topic] or []?
             duration: 60, // todo: to calculate duration
         }
+        
     });
     
     return {
+        ...newRecording,
         transcript,
         shortSummary,
         allTopics,
@@ -43,7 +46,7 @@ export const createRecording = async(req: CreateRequest) => {
 };
 
 export const getRecording = async(req: GetRequest) => {
-    const {userId, recordingId} = req;
+    const {recordingId} = req;
     const id = recordingId;
     
     const conversation = await prisma.conversation.findUnique({
@@ -79,7 +82,7 @@ export const listRecordings = async(req: ListRequest) => {
 }
 
 export const deleteRecording = async(req: DeleteRequest) => {
-    const {userId, recordingId} = req;
+    const {recordingId} = req;
     // todo: delete file in storage as well
     const result = await prisma.conversation.delete({
         where: { id: recordingId},
@@ -90,7 +93,7 @@ export const deleteRecording = async(req: DeleteRequest) => {
 
 
 export const updateRecording = async(req: UpdateRequest) => {
-    const {userId, recordingId, title, transcript} = req;
+    const { recordingId, title, transcript} = req;
     const result = await prisma.conversation.update({
         where: { id: recordingId},
         data: {
