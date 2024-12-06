@@ -48,14 +48,12 @@ const processResult = (result: SyncPrerecordedResponse) => {
   const transcript = result.results.channels[0].alternatives[0].paragraphs?.transcript || result.results.channels[0].alternatives[0].transcript;
   const {summary, topics, intents} = result.results
   const shortSummary = summary?.short;
-  const allTopics = topics?.segments.map((segment) => {
-      const topics = segment.topics?.map((topicObj)=> topicObj.topic);
-      return topics
-  });
-  const allIntents = intents?.segments.map((segment) => {
-      const intents = segment?.intents?.map((intentObj)=> intentObj.intent);
-      return intents;
-  });
+  const allTopics = topics?.segments.flatMap(segment => 
+    segment.topics?.map(topicObj => topicObj.topic) || []
+  );
+  const allIntents = intents?.segments.flatMap((segment) => 
+    segment.intents?.map((intentObj)=> intentObj.intent) || []
+  );
   return {
       transcript,
       shortSummary,
