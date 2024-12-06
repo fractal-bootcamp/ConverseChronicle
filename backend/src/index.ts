@@ -6,19 +6,22 @@ import {
   getAuth,
   requireAuth, 
 } from "@clerk/express";
-import { GetRequest, DeleteRequest, UpdateRequest, CreateRequest } from "./model";
+import { GetRequest, DeleteRequest, UpdateRequest } from "./model";
 import cors from "cors";
+import multer from 'multer';
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(clerkMiddleware());
+app.use(clerkMiddleware({debug: true}));
 app.use(cors());
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // list recordings
-app.get('/recordings/', requireAuth(), async (req: Request, res: Response): Promise<any> => {
+app.get('/recordings', requireAuth(), async (req: Request, res: Response): Promise<any> => {
   const {userId} = getAuth(req);
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -67,18 +70,16 @@ app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
 });
 
 // create recording
-app.post('/recordings/create', requireAuth(), async (req: Request, res: Response): Promise<any> => {
-  const recordingBody = req.body.recordingBody;
+app.post('/recordings/create', requireAuth({debug: true}), upload.single('file'), async (req: Request, res: Response): Promise<any> => {
+  const recordingBody = req.file;
   const {userId} = getAuth(req);
   if (!recordingBody || !userId) {
     return res.status(400).json({ error: 'Recording body and User Id can\'t be empty' });
   };
-  const createRequest: CreateRequest = {
-    buffer: recordingBody,
-    userId: userId
-  }
+  console.log(`got request for user: `, userId);
   try {
-    const response = await createRecording(createRequest);
+    const response = await createRecording( {recordingBody: recordingBody.buffer, userId});
+    console.log(`got response: `, JSON.stringify(response, null, 2));
     return res.status(200).json({
         success: true,
         data: response,

@@ -11,6 +11,8 @@ import { Audio } from "expo-av";
 import { AudioWaveform } from "./AudioWaveform";
 import * as FileSystem from "expo-file-system";
 import { useTheme } from "@react-navigation/native";
+import { useAuth } from "@clerk/clerk-expo";
+import {ENV} from "../../config";
 
 interface Marker {
   timestamp: number;
@@ -23,6 +25,8 @@ interface AudioRecorderProps {
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onRecordingComplete,
 }) => {
+  const { getToken } = useAuth();
+
   const { colors } = useTheme();
   const [timer, setTimer] = useState<number>(0);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -123,15 +127,44 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       if (uri) {
         console.log("Original recording at:", uri);
-        const base64Data = await convertAudioToBase64(uri);
-        console.log("File converted successfully");
-
+        const data = await sendRecordingToBackend(uri)
         if (onRecordingComplete) {
           onRecordingComplete(uri);
         }
       }
     } catch (error) {
       console.error("Stop recording failed:", error);
+    }
+  };
+
+  const sendRecordingToBackend = async ( uri: string) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', {
+          uri: uri,
+          name: 'file',
+          type: 'audio/m4a',
+        } as any)
+
+        const token = await getToken();
+        console.log(`token is ${token}`);
+        const response = await fetch(`${ENV.prod}/recordings/create`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+            console.log(`response`, response);
+            throw new Error(`Failed to send recording to backend ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Response from backend:", data);
+    } catch (error) {
+        console.error("Error sending recording to backend:", error);
     }
   };
 

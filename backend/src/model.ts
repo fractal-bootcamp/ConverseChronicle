@@ -1,7 +1,7 @@
 export interface CreateRequest {
   userId: string;
   recordingUrl?: string;
-  buffer: Buffer;
+  recordingBody: Buffer;
 }
 
 export interface GetRequest {
