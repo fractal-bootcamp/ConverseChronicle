@@ -7,7 +7,7 @@ import {
   getAuth,
   requireAuth, 
 } from "@clerk/express";
-import { GetRequest, ListRequest, DeleteRequest, UpdateRequest, CreateRequest } from "./model";
+import { GetRequest, DeleteRequest, UpdateRequest, CreateRequest } from "./model";
 
 dotenv.config();
 const app = express();

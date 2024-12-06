@@ -20,7 +20,7 @@ export const generatePresignedUrl = async (userId: string, filename: string): Pr
         console.error('Error creating signed upload URL:', error);
         throw error;
     }
-    const { signedUrl, token } = data;
+    const { signedUrl } = data;
     return signedUrl;
 }
 
