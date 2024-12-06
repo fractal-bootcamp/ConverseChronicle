@@ -8,13 +8,15 @@ import {
   requireAuth, 
 } from "@clerk/express";
 import { GetRequest, DeleteRequest, UpdateRequest, CreateRequest } from "./model";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(clerkMiddleware());
+app.use(cors());
 
 // list recordings
 app.get('/recordings/', requireAuth(), async (req: Request, res: Response): Promise<any> => {
