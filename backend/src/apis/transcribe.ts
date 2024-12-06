@@ -1,6 +1,5 @@
-import { createClient, DeepgramResponse, SyncPrerecordedResponse } from "@deepgram/sdk";
+import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
 import dotenv from "dotenv";
-const fs = require('fs');
 
 dotenv.config();
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
