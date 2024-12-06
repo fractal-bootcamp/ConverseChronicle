@@ -1,7 +1,8 @@
+import path from 'path';
 import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
 const deepgram = createClient(deepgramApiKey);
 
