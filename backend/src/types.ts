@@ -1,7 +1,7 @@
-import { Request } from 'express';
-
-export interface AuthenticatedRequest extends Request {
-  auth: () => {
-    userId: string;
-  };
-} 
+export interface TranscribeResponse {
+  transcript: string;
+  shortSummary?: string;
+  allTopics?: string[];
+  allIntents?: string[];
+  title: string;
+}

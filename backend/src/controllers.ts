@@ -6,9 +6,10 @@ import { BUCKET_NAME, FILE_EXTENSION } from './constant';
 import { transcribeFile } from './apis/transcribe';
 
 const prisma = new PrismaClient();
+
 export const createRecording = async(req: CreateRequest) => {
     const {userId, recordingBody} = req;
-    const {transcript, shortSummary, allTopics, allIntents} = await transcribeFile(recordingBody!);
+    const {transcript, shortSummary, allTopics, allIntents, title} = await transcribeFile(recordingBody!);
 
     console.log(`file transcribed successfully`);
     // upload audio to supabase storage
@@ -19,9 +20,9 @@ export const createRecording = async(req: CreateRequest) => {
     // save record to db
     const newRecording = await prisma.conversation.create({
         data: {
-            title: "hello", // todo: user input title or AI generated? 
+            title: title ?? `conversation_${new Date().toLocaleDateString()}`,
             userId: userId,
-            recording_url: "",
+            recording_url: "", // todo: add recording url
             file_path: filePath, 
             transcript: transcript,
             summary: shortSummary ?? "",
