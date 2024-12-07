@@ -19,8 +19,8 @@ import { Colors } from "@/constants/Colors";
 export default function SignInScreen() {
   const { signIn, setActive } = useSignIn();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("jakezegil@gmail.com");
+  const [password, setPassword] = useState("iamcece1!");
   const [error, setError] = useState("");
   const colorScheme = useColorScheme();
   const fadeAnim = new Animated.Value(0);

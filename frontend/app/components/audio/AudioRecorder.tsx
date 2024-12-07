@@ -13,6 +13,8 @@ import * as FileSystem from "expo-file-system";
 import { useTheme } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { ENV } from "../../config";
+import HomeLayout from "@/app/(home)/_layout";
+import { Tabs, useRouter } from "expo-router";
 
 interface Marker {
   timestamp: number;
@@ -22,7 +24,27 @@ interface AudioRecorderProps {
   onRecordingComplete?: (uri: string) => void;
 }
 
+const useRecordingStatusUpdate = () => {
+  const [loudnessHistory, setLoudnessHistory] = useState<number[]>([]);
+
+  const appendLoudness = (metering: number | undefined) => {
+    if (typeof metering === "undefined") return;
+
+    setLoudnessHistory((prev) => {
+      const newHistory = [...prev, metering];
+
+      return newHistory;
+    });
+  };
+
+  return {
+    loudnessHistory,
+    appendLoudness,
+  };
+};
+
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  onRecord,
   onRecordingComplete,
 }) => {
   const { getToken } = useAuth();
@@ -32,7 +54,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const router = useRouter();
+
+  const { loudnessHistory, appendLoudness } = useRecordingStatusUpdate();
 
   useEffect(() => {
     setupAudio();
@@ -73,7 +97,11 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       setTimer(0);
       const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        (status) => {
+          appendLoudness(status.metering);
+        },
+        100
       );
       setRecording(recording);
       setIsRecording(true);
@@ -127,7 +155,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       if (uri) {
         console.log("Original recording at:", uri);
-        const data = await sendRecordingToBackend(uri)
+        const data = await sendRecordingToBackend(uri);
         if (onRecordingComplete) {
           onRecordingComplete(uri);
         }
@@ -140,25 +168,27 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const sendRecordingToBackend = async (uri: string) => {
     try {
       const formData = new FormData();
-      formData.append('file', {
+      formData.append("file", {
         uri: uri,
-        name: 'file',
-        type: 'audio/m4a',
-      } as any)
+        name: "file",
+        type: "audio/m4a",
+      } as any);
 
       const token = await getToken();
       console.log(`token is ${token}`);
       const response = await fetch(`${ENV.prod}/recordings/create`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
 
       if (!response.ok) {
         console.log(`response`, response);
-        throw new Error(`Failed to send recording to backend ${response.statusText}`);
+        throw new Error(
+          `Failed to send recording to backend ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -180,11 +210,36 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, { borderBottomColor: colors.primary }]}
+          onPress={() => router.push("/(home)")}
+        >
+          <Text style={[styles.tabText, { color: colors.primary }]}>
+            Record
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabButton}
+          onPress={() => router.push("/(home)/files")}
+        >
+          <Text style={[styles.tabText, { color: colors.text }]}>
+            Recordings
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabButton}
+          onPress={() => router.push("/(home)/editor")}
+        >
+          <Text style={[styles.tabText, { color: colors.text }]}>Notes</Text>
+        </TouchableOpacity>
+      </View>
       <AudioWaveform
         isRecording={isRecording && !isPaused}
         time={isRecording ? formatTime(timer) : undefined}
         bpm={120}
         offset="00:00:00:00"
+        loudnessHistory={loudnessHistory}
       />
       <View style={styles.controlsContainer}>
         {!isRecording ? (
@@ -332,5 +387,21 @@ const styles = StyleSheet.create({
   timeDisplayText: {
     fontSize: 24,
     fontWeight: "bold",
+  },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 20,
+  },
+  tabButton: {
+    padding: 10,
+    borderRadius: 8,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 1,
+    color: "#fff",
   },
 });
