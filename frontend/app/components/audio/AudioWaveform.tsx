@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Animated, Text, ScrollView } from "react-native";
 import { Audio } from "expo-av";
 import { useTheme } from "@react-navigation/native";
+import { transformAudioLevelWithExponentialScaling } from "./utils";
 
 interface AudioWaveformProps {
   isRecording: boolean;
   time?: string;
   bpm?: number;
   offset?: string;
+  loudnessHistory: number[];
 }
 
 interface WaveformPoint {
@@ -20,9 +22,15 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   time = "00:00:00:00",
   bpm = "--",
   offset = "00:00:00:00",
+  loudnessHistory = [],
 }) => {
   const { colors } = useTheme();
-  const [waveformHistory, setWaveformHistory] = useState<WaveformPoint[]>([]);
+
+  const waveformHistory = loudnessHistory.map((meter, index) => ({
+    amplitude: transformAudioLevelWithExponentialScaling(meter) + 5,
+    timestamp: Date.now() - index * 100,
+  }));
+
   const scrollViewRef = useRef<ScrollView>(null);
   const animatedBars = useRef<Animated.Value[]>(
     Array(BAR_COUNT)
@@ -34,12 +42,6 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   useEffect(() => {
     if (isRecording) {
       const interval = setInterval(() => {
-        const newPoint = {
-          amplitude: Math.random() * 50 + 5, // Replace with actual audio amplitude
-          timestamp: Date.now(),
-        };
-        setWaveformHistory((prev) => [...prev, newPoint]);
-
         // Scroll to the end of the timeline
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -51,10 +53,10 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   // Live waveform animation
   useEffect(() => {
     if (isRecording) {
-      const animations = animatedBars.map((bar) => {
+      const animations = animatedBars.map((bar, index) => {
         return Animated.sequence([
           Animated.timing(bar, {
-            toValue: Math.random() * 50 + 5,
+            toValue: waveformHistory[index]?.amplitude || 0,
             duration: 500,
             useNativeDriver: false,
           }),
