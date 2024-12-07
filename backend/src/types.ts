@@ -3,5 +3,5 @@ export interface TranscribeResponse {
   shortSummary?: string;
   allTopics?: string[];
   allIntents?: string[];
-  title?: string;
+  title: string;
 }
