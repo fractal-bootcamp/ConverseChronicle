@@ -15,6 +15,84 @@ const themeColors = {
   borderColor: "rgba(255, 255, 255, 0.3)",
 };
 
+const DbMarkers = () => {
+  const dbLevels = [0, -6, -12, -18, -24, -30, -36, -42, -48, -54, -60];
+
+  return (
+    <View style={styles.dbMarkersContainer}>
+      {dbLevels.map((db) => (
+        <Text key={db} style={styles.dbText}>
+          {db} dB
+        </Text>
+      ))}
+    </View>
+  );
+};
+
+interface AudioMetricsProps {
+  peakLevel: number;
+  rmsLevel: number;
+  crestFactor: number;
+  dynamicRange: number;
+  clipCount: number;
+  lufs: number;
+  bpm: number;
+  offset: string;
+}
+
+const AudioMetrics: React.FC<AudioMetricsProps> = ({
+  peakLevel = -12,
+  rmsLevel = -24,
+  crestFactor = 12,
+  dynamicRange = 18,
+  clipCount = 0,
+  lufs = -14,
+  bpm = 120,
+  offset = "00:00:00:00",
+}) => (
+  <View style={styles.metricsContainer}>
+    <View style={styles.metricsGrid}>
+      <View style={styles.metricsRow}>
+        <MetricCell
+          label="PEAK"
+          value={`${peakLevel.toFixed(1)} dB`}
+          alert={peakLevel > -1}
+        />
+        <MetricCell label="DR" value={`${dynamicRange.toFixed(1)} dB`} />
+      </View>
+      <View style={styles.metricsRow}>
+        <MetricCell label="RMS" value={`${rmsLevel.toFixed(1)} dB`} />
+        <MetricCell
+          label="CLIPS"
+          value={clipCount.toString()}
+          alert={clipCount > 0}
+        />
+      </View>
+      <View style={styles.metricsRow}>
+        <MetricCell label="LUFS" value={`${lufs.toFixed(1)}`} />
+        <MetricCell label="BPM" value={bpm.toString()} />
+      </View>
+      <View style={styles.metricsRow}>
+        <MetricCell label="CREST" value={`${crestFactor.toFixed(1)} dB`} />
+        <MetricCell label="OFFSET" value={offset} />
+      </View>
+    </View>
+  </View>
+);
+
+const MetricCell: React.FC<{
+  label: string;
+  value: string;
+  alert?: boolean;
+}> = ({ label, value, alert = false }) => (
+  <View style={styles.metricCell}>
+    <Text style={styles.metricLabel}>{label}</Text>
+    <Text style={[styles.metricValue, alert && styles.metricValueAlert]}>
+      {value}
+    </Text>
+  </View>
+);
+
 interface AudioWaveformProps {
   isRecording: boolean;
   time?: string;
@@ -38,8 +116,8 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   const { colors } = useTheme();
 
   const waveformHistory = loudnessHistory.map((meter, index) => ({
-    amplitude: transformAudioLevelWithExponentialScaling(meter) + 5,
-    timestamp: Date.now() - index * 100,
+    amplitude: transformAudioLevelWithExponentialScaling(meter) + 2,
+    timestamp: Date.now() - index * 200,
   }));
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -68,18 +146,18 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
         return Animated.sequence([
           Animated.timing(bar, {
             toValue: waveformHistory[index]?.amplitude || 0,
-            duration: 500,
+            duration: 650,
             useNativeDriver: false,
           }),
           Animated.timing(bar, {
             toValue: INITIAL_HEIGHT,
-            duration: 500,
+            duration: 100,
             useNativeDriver: false,
           }),
         ]);
       });
 
-      const loop = Animated.loop(Animated.stagger(50, animations));
+      const loop = Animated.loop(Animated.stagger(11, animations));
       loop.start();
 
       return () => {
@@ -109,6 +187,8 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
       {/* Timeline Waveform */}
       <View style={styles.timelineContainer}>
+        <DbMarkers />
+
         <View style={styles.timelineBackground}>
           {Array.from({ length: 12 }).map((_, i) => (
             <View key={i} style={styles.timelineGridLine} />
@@ -155,23 +235,17 @@ const TimeDisplay: React.FC<TimeDisplayProps> = ({
         <Text style={styles.timeLabel}>TIMECODE</Text>
         <Text style={styles.timeDisplayText}>{time}</Text>
       </View>
-      <View style={styles.parametersContainer}>
-        <View style={styles.parameterBox}>
-          <Text style={styles.parameterLabel}>BPM</Text>
-          <Text style={[styles.parameterValue, { color: themeColors.orange }]}>
-            {bpm}
-          </Text>
-        </View>
-        <View style={styles.parameterBox}>
-          <Text style={styles.parameterLabel}>OFFSET</Text>
-          <Text
-            style={[styles.parameterValue, { color: themeColors.lightOrange }]}
-          >
-            {offset}
-          </Text>
-        </View>
-      </View>
     </View>
+    <AudioMetrics
+      peakLevel={-3}
+      rmsLevel={-18}
+      crestFactor={15}
+      dynamicRange={20}
+      clipCount={0}
+      lufs={-14}
+      bpm={120}
+      offset="00:00:00:00"
+    />
   </View>
 );
 
@@ -199,7 +273,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 60,
+    height: 55,
     gap: 2,
     backgroundColor: themeColors.lightBlue,
     borderRadius: 30,
@@ -216,6 +290,23 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  dbMarkersContainer: {
+    position: "absolute",
+    left: -10,
+    top: 0,
+    bottom: 0,
+    width: 35,
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    zIndex: 2,
+  },
+  dbText: {
+    color: themeColors.white,
+    fontSize: 6,
+    textAlign: "right",
+    opacity: 0.8,
+  },
+
   bar: {
     width: 4,
     borderRadius: 10,
@@ -224,7 +315,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: themeColors.borderColor,
     borderRadius: 12,
-    padding: 15,
+    padding: 5,
     marginVertical: 10,
     backgroundColor: themeColors.lightBlue,
     shadowColor: themeColors.white,
@@ -264,13 +355,13 @@ const styles = StyleSheet.create({
   },
   parameterBox: {
     backgroundColor: themeColors.matteBlue,
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    padding: 2,
+    borderRadius: 2,
+    borderWidth: 6,
     borderColor: themeColors.borderColor,
     shadowColor: themeColors.white,
     shadowOffset: {
-      width: 0,
+      width: 2,
       height: 2,
     },
     shadowOpacity: 0.1,
@@ -290,7 +381,7 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
   },
   timelineContainer: {
-    height: 100,
+    height: 150,
     backgroundColor: themeColors.lightBlue,
     borderRadius: 12,
     marginVertical: 10,
@@ -306,19 +397,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 8,
+    paddingLeft: 50,
   },
   timelineBackground: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 10,
   },
   timelineGridLine: {
-    width: 1,
+    width: 0.5,
     height: "100%",
 
     backgroundColor: themeColors.borderColor,
@@ -332,21 +424,93 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     height: "100%",
     paddingHorizontal: 5,
-    gap: 0.2,
+    gap: 0.5,
   },
   timelineBar: {
-    width: 5,
+    width: 2,
     opacity: 0.8,
   },
   timelineOverlay: {
     position: "absolute",
     right: 0,
     top: 0,
-    bottom: 50,
+    bottom: 90,
     width: 400,
     backgroundColor: themeColors.matteBlue,
     opacity: 0.5,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 0,
+  },
+  metricsContainer: {
+    backgroundColor: themeColors.matteBlue,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: themeColors.borderColor,
+    overflow: "hidden",
+  },
+  metricsHeader: {
+    backgroundColor: `${themeColors.lightBlue}80`,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.borderColor,
+  },
+  metricsTitle: {
+    color: themeColors.white,
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 1,
+    opacity: 0.7,
+  },
+  metricsContent: {
+    padding: 6,
+    gap: 6,
+  },
+  metricsRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  metricCell: {
+    flex: 1,
+    backgroundColor: `${themeColors.lightBlue}40`,
+    borderRadius: 4,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: themeColors.borderColor,
+  },
+  metricCellAlert: {
+    backgroundColor: "rgba(255, 59, 48, 0.1)",
+    borderColor: "#FF3B30",
+  },
+  metricLabel: {
+    color: themeColors.white,
+    fontSize: 8,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    opacity: 0.7,
+    marginBottom: 2,
+  },
+  metricValueContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 2,
+  },
+  metricValue: {
+    color: themeColors.orange,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "monospace",
+  },
+  metricUnit: {
+    color: themeColors.orange,
+    fontSize: 8,
+    fontWeight: "600",
+    opacity: 0.7,
+    fontFamily: "monospace",
+  },
+  metricValueAlert: {
+    color: "#FF3B30",
   },
 });
