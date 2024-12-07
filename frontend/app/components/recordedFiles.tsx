@@ -8,10 +8,11 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { ENV } from "../config";
 import { useAuth } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
 
 // interface for the audio file
 interface Recording {
@@ -24,6 +25,7 @@ interface Recording {
 
 export function RecordedFiles() {
   const { getToken } = useAuth();
+  const router = useRouter();
 
   // dark/light mode
   const { colors } = useTheme();
@@ -32,6 +34,15 @@ export function RecordedFiles() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleRecordingPress = (recording: Recording) => {
+    router.push({
+      pathname: "/recording-details",
+      params: {
+        recordingId: recording.id,
+        title: recording.title
+      }
+    });
+  };
   // load files when the component mounts
   useEffect(() => {
     fetchRecordings();
@@ -114,6 +125,7 @@ export function RecordedFiles() {
         <TouchableOpacity
           key={recording.id}
           style={[styles.fileItem, { backgroundColor: colors.card }]}
+          onPress={() => handleRecordingPress(recording)}
         >
           <Ionicons name="musical-note" size={24} color={colors.text} />
 
@@ -151,9 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginTop: 4,  // Add space between play button and duration
-  },
-  playButton: {
-    padding: 8,
   },
   container: {
     flex: 1,
