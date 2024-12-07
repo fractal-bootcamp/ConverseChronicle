@@ -146,15 +146,15 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         type: 'audio/m4a',
       } as any)
 
-      const token = await getToken();
-      console.log(`token is ${token}`);
-      const response = await fetch(`${ENV.prod}/recordings/create`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
+        const token = await getToken();
+        console.log(`token is ${token}`);
+        const response = await fetch(`${ENV.dev}/recordings/create`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
 
       if (!response.ok) {
         console.log(`response`, response);

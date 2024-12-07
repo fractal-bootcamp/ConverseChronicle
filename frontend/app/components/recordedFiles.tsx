@@ -5,64 +5,114 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
+import { ENV } from "../config";
+import { useAuth } from "@clerk/clerk-expo";
 
 // interface for the audio file
-interface AudioFile {
-  uri: string; // uri of the file
-  name: string; // name of the file
-  createdAt: Date; // timestamp
+interface Recording {
+  id: string;
+  createdAt: string;
+  title: string;
+  duration?: number;
+  topics?: string[]; // todo: display this under title ? 
 }
 
 export function RecordedFiles() {
+  const { getToken } = useAuth();
+
   // dark/light mode
   const { colors } = useTheme();
-
-  // state to store list of audio files
-  const [files, setFiles] = useState<AudioFile[]>([]);
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // load files when the component mounts
   useEffect(() => {
-    loadFiles();
+    fetchRecordings();
   }, []);
 
-  const loadFiles = async () => {
+  const fetchRecordings = async () => {
     try {
-      const documentsDir = FileSystem.documentDirectory; // get the documents directory
-      if (!documentsDir) return; // if the documents directory is not found, return
+      setError(null);
+      const token = await getToken();
+      const response = await fetch(`${ENV.prod}/recordings`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
 
-      const files = await FileSystem.readDirectoryAsync(documentsDir); // read the directory
-      const audioFiles = files
-        .filter((file) => file.endsWith(".m4a")) // filter the files to only include .m4a files
-        .map((file) => ({
-          uri: documentsDir + file,
-          name: file,
-          createdAt: new Date(), // In a real app, you'd get this from file metadata
-        }));
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
 
-      setFiles(audioFiles);
+      const data = await response.json();
+      setRecordings(data.data);
     } catch (error) {
-      console.error("Error loading files:", error);
+      console.error('Error fetching recordings:', error);
+      setError('Failed to load recordings, please retry');
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
     }
   };
 
+    // Pull to refresh handler
+    const onRefresh = React.useCallback(() => {
+      setRefreshing(true);
+      fetchRecordings();
+    }, []);
+
   // format the date
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long', // "Monday"
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true // for AM/PM
+    });  
+  };
+
+  const formatDuration = (seconds?: number): string => {
+    if (!seconds) return '--:--';
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl 
+          refreshing={refreshing}  // When true, shows built-in spinner
+          onRefresh={onRefresh} 
+        />
+      }
+    >
       <Text style={[styles.title, { color: colors.text }]}>
         Your Recordings
       </Text>
+      {isLoading && !refreshing && (
+        <ActivityIndicator size="large" color={colors.primary} />
+      )}
+      {error && (
+        <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+      )}
       {/* list the files */}
-      {files.map((file, index) => (
+      {recordings.map((recording: Recording) => (
         <TouchableOpacity
-          key={index}
+          key={recording.id}
           style={[styles.fileItem, { backgroundColor: colors.card }]}
         >
           <Ionicons name="musical-note" size={24} color={colors.text} />
@@ -70,17 +120,22 @@ export function RecordedFiles() {
           {/* file info */}
           <View style={styles.fileInfo}>
             <Text style={[styles.fileName, { color: colors.text }]}>
-              {file.name}
+              {recording.title}
             </Text>
             <Text style={[styles.fileDate, { color: colors.text + "80" }]}>
-              {formatDate(file.createdAt)}
+              {formatDate(recording.createdAt)}
             </Text>
           </View>
 
           {/* play button */}
-          <TouchableOpacity style={styles.playButton}>
-            <Ionicons name="play" size={24} color={colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.rightContainer}>
+            <TouchableOpacity style={styles.playButton}>
+              <Ionicons name="play" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <Text style={[styles.duration, { color: colors.text + "80" }]}>
+              {formatDuration(recording.duration)}
+            </Text>
+          </View>
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -88,6 +143,18 @@ export function RecordedFiles() {
 }
 
 const styles = StyleSheet.create({
+  rightContainer: {
+    alignItems: 'center',  // Center items vertically
+    justifyContent: 'center',
+  },
+  duration: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,  // Add space between play button and duration
+  },
+  playButton: {
+    padding: 8,
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -126,5 +193,10 @@ const styles = StyleSheet.create({
   },
   playButton: {
     padding: 8,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    fontSize: 16,
   },
 });
