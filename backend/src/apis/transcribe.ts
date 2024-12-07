@@ -1,5 +1,7 @@
 import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
 import dotenv from "dotenv";
+import { generateSummary, generateTitle } from "./llm";
+import { TranscribeResponse } from "../types";
 
 dotenv.config();
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
@@ -33,20 +35,21 @@ export const transcribeFile = async (audioBuffer: Buffer) => {
       }
   );
   if (error) throw error;
-  return processResult(result);
+  try {
+    return await processResult(result);
+  } catch (error) {
+    console.error("Error processing result:", error);
+    throw error;
+  }
 }
 
-export interface TranscribeResponse {
-  transcript: string;
-  shortSummary?: string;
-  topics?: string[];
-  intents?: string[]
-}
-
-const processResult = (result: SyncPrerecordedResponse) => {
+const processResult = async (result: SyncPrerecordedResponse): Promise<TranscribeResponse> => {
   const transcript = result.results.channels[0].alternatives[0].paragraphs?.transcript || result.results.channels[0].alternatives[0].transcript;
+  if (!transcript) throw new Error("No transcript found");
   const {summary, topics, intents} = result.results
-  const shortSummary = summary?.short || "";
+  // deepgram provides a summary, or use LLM to generate summary if not provided
+  const shortSummary = summary?.short ?? await generateSummary(transcript);
+
   const allTopics = topics?.segments.flatMap(segment => 
     segment.topics?.map(topicObj => topicObj.topic) || []
   ) ?? [];
@@ -54,8 +57,12 @@ const processResult = (result: SyncPrerecordedResponse) => {
     segment.intents?.map((intentObj)=> intentObj.intent) || []
   )?? [];
   console.log(`transcript`, transcript);
+  // use LLM to generate title
+  const title = await generateTitle(shortSummary);
+
   return {
       transcript,
+      title,
       shortSummary,
       allTopics,
       allIntents

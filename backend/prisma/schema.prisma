@@ -19,7 +19,7 @@ datasource db {
 
 model Conversation {
   id            String   @id @default(cuid())
-  userId        String   //clerk_id
+  userId        String //clerk_id
   // userId        String
   // user          User     @relation(fields: [userId], references: [clerkId])
   title         String
@@ -27,6 +27,7 @@ model Conversation {
   file_path     String
   transcript    String
   summary       String
+  //notes         String
   duration      Int
   topics        Topic[]
   createdAt     DateTime @default(now())
