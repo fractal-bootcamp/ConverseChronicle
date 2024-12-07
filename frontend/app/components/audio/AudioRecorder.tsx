@@ -12,7 +12,7 @@ import { AudioWaveform } from "./AudioWaveform";
 import * as FileSystem from "expo-file-system";
 import { useTheme } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
-import {ENV} from "../../config";
+import { ENV } from "../../config";
 
 interface Marker {
   timestamp: number;
@@ -137,34 +137,34 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   };
 
-  const sendRecordingToBackend = async ( uri: string) => {
+  const sendRecordingToBackend = async (uri: string) => {
     try {
-        const formData = new FormData();
-        formData.append('file', {
-          uri: uri,
-          name: 'file',
-          type: 'audio/m4a',
-        } as any)
+      const formData = new FormData();
+      formData.append('file', {
+        uri: uri,
+        name: 'file',
+        type: 'audio/m4a',
+      } as any)
 
-        const token = await getToken();
-        console.log(`token is ${token}`);
-        const response = await fetch(`${ENV.prod}/recordings/create`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData,
-        });
+      const token = await getToken();
+      console.log(`token is ${token}`);
+      const response = await fetch(`${ENV.test}/recordings/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
 
-        if (!response.ok) {
-            console.log(`response`, response);
-            throw new Error(`Failed to send recording to backend ${response.statusText}`);
-        }
+      if (!response.ok) {
+        console.log(`response`, response);
+        throw new Error(`Failed to send recording to backend ${response.statusText}`);
+      }
 
-        const data = await response.json();
-        console.log("Response from backend:", data);
+      const data = await response.json();
+      console.log("Response from backend:", data);
     } catch (error) {
-        console.error("Error sending recording to backend:", error);
+      console.error("Error sending recording to backend:", error);
     }
   };
 
