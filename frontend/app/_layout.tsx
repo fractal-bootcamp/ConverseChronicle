@@ -6,9 +6,17 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import LottieView from "lottie-react-native";
+
+const themeColors = {
+  matteBlue: "#2C3E50",
+  lightBlue: "#007AFF",
+  borderColor: "rgba(255, 255, 255, 0.3)",
+  white: "#FFFFFF",
+};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -26,7 +34,15 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
-          <RootLayoutNav />
+          <View style={styles.container}>
+            <LottieView
+              source={require("@/assets/animations/background-sparkles.json")}
+              autoPlay
+              loop
+              style={styles.backgroundAnimation}
+            />
+            <RootLayoutNav />
+          </View>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>
@@ -59,10 +75,18 @@ function RootLayoutNav() {
                 onPress={handleLogout}
                 style={{ marginRight: 16 }}
               >
-                <Ionicons name="log-out-outline" size={24} color="#007AFF" />
+                <Ionicons
+                  name="log-out-outline"
+                  size={24}
+                  color={themeColors.lightBlue}
+                />
               </TouchableOpacity>
             )
           : undefined,
+        headerStyle: {
+          backgroundColor: themeColors.matteBlue,
+        },
+        headerTintColor: themeColors.white,
       }}
     >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -70,3 +94,15 @@ function RootLayoutNav() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: themeColors.matteBlue,
+  },
+  backgroundAnimation: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+});

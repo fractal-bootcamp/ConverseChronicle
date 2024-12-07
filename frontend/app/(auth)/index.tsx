@@ -4,6 +4,16 @@ import { Link } from "expo-router";
 import { Text, View, StyleSheet, Animated } from "react-native";
 import LottieView from "lottie-react-native";
 
+// Match theme colors from AudioRecorder
+const themeColors = {
+  matteBlue: "#2C3E50",
+  lightBlue: "#34495E",
+  orange: "#E67E22",
+  lightOrange: "#F39C12",
+  white: "#FFFFFF",
+  borderColor: "rgba(255, 255, 255, 0.3)",
+};
+
 export default function Page() {
   const { user } = useUser();
   const fadeAnim = new Animated.Value(0);
@@ -67,7 +77,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5FCFF",
+    backgroundColor: themeColors.matteBlue,
   },
   backgroundAnimation: {
     position: "absolute",
@@ -76,17 +86,19 @@ const styles = StyleSheet.create({
   },
   signedInContainer: {
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    backgroundColor: themeColors.lightBlue,
     padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: themeColors.borderColor,
+    shadowColor: themeColors.white,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
   },
   signedOutContainer: {
     alignItems: "center",
@@ -95,26 +107,30 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
+    color: themeColors.white,
+    letterSpacing: 1,
   },
   link: {
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    backgroundColor: themeColors.lightBlue,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 30,
     width: 200,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: themeColors.borderColor,
+    shadowColor: themeColors.white,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 5,
   },
   linkText: {
     textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 16,
+    fontWeight: "600",
+    color: themeColors.white,
+    letterSpacing: 1,
   },
 });
