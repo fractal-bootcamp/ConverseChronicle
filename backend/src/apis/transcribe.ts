@@ -48,7 +48,7 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
   if (!transcript) throw new Error("No transcript found");
   const {summary, topics, intents} = result.results
   // deepgram provides a summary, or use LLM to generate summary if not provided
-  const shortSummary = summary?.short ?? await generateSummary(transcript);
+  const shortSummary = summary?.short || await generateSummary(transcript);
 
   const allTopics = topics?.segments.flatMap(segment => 
     segment.topics?.map(topicObj => topicObj.topic) || []
@@ -58,7 +58,7 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
   )?? [];
   console.log(`transcript`, transcript);
   // use LLM to generate title
-  const title = await generateTitle(shortSummary);
+  const title = await generateTitle(shortSummary ? shortSummary : transcript);
 
   return {
       transcript,
