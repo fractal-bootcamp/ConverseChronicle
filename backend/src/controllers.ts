@@ -77,7 +77,6 @@ export const listRecordings = async(req: ListRequest) => {
             duration: true
         }
     });
-    console.log(conversationsInfo);
     return conversationsInfo;
 }
 
