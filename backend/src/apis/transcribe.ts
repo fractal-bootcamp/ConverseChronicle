@@ -1,7 +1,7 @@
 import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
 import dotenv from "dotenv";
 import { generateSummary, generateTitle } from "./llm";
-import { TranscribeResponse } from "../types";
+import { TranscribeResponse, Utterance } from "../types";
 
 dotenv.config();
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
@@ -34,6 +34,7 @@ export const transcribeFile = async (audioBuffer: Buffer) => {
         model: "nova-2",
         smart_format: true,
         diarize: true,  // identify speaker
+        utterances: true,
         summarize: "v2",
         topics: true,
         language: 'en-US',
@@ -47,7 +48,7 @@ export const transcribeFile = async (audioBuffer: Buffer) => {
 const processResult = async (result: SyncPrerecordedResponse): Promise<TranscribeResponse> => {
   const transcript = result.results.channels[0].alternatives[0].paragraphs?.transcript || result.results.channels[0].alternatives[0].transcript;
   if (!transcript) throw new Error("No transcript found");
-  const {summary, topics, intents} = result.results
+  const {summary, topics, intents, utterances} = result.results
   // deepgram provides a summary, or use LLM to generate summary if not provided
   const shortSummary = summary?.short || await generateSummary(transcript);
 
@@ -57,6 +58,12 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
   const allIntents = intents?.segments.flatMap((segment) => 
     segment.intents?.map((intentObj)=> intentObj.intent) || []
   )?? [];
+  const allUtterances: Utterance[] = utterances?.map(utterance => ({
+    speaker: utterance.speaker?.toString() || "",
+    transcript: utterance.transcript,
+    start: utterance.start,
+    end: utterance.end
+  } as Utterance)) || [];
   //console.log(`transcript`, transcript);
   // use LLM to generate title
   const title = await generateTitle(shortSummary ? shortSummary : transcript);
@@ -66,6 +73,7 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
       title,
       shortSummary,
       allTopics,
-      allIntents
+      allIntents,
+      allUtterances
   };
 }

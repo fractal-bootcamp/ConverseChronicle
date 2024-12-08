@@ -6,6 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@clerk/clerk-expo";
 import { ENV } from "../config";
 
+interface Utterance {
+  id: string;
+  speaker: string;
+  transcript: string;
+  start: number;
+  end: number;
+}
+
 interface RecordingDetailsData {
   id: string;
   title: string;
@@ -13,6 +21,7 @@ interface RecordingDetailsData {
   duration: number;
   summary?: string;
   transcript?: string;
+  utterances?: Utterance[];
 }
 
 export default function RecordingDetails({recordingId}: { recordingId: string }) {
@@ -118,7 +127,7 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
           )}
 
           {/* Transcript Section */}
-          {recordingDetails.transcript && (
+          {/* {recordingDetails.transcript && (
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript</Text>
               <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -126,6 +135,27 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
                   {recordingDetails.transcript}
                 </Text>
               </View>
+            </View>
+          )} */}
+
+          {recordingDetails.utterances && recordingDetails.utterances.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Conversation</Text>
+              {recordingDetails.utterances.map((utterance, index) => (
+                <View key={index} style={[styles.utteranceCard, { backgroundColor: colors.card }]}>
+                  <View style={styles.utteranceHeader}>
+                    <Text style={[styles.speakerText, { color: colors.text }]}>
+                      Speaker {utterance.speaker}
+                    </Text>
+                    <Text style={[styles.timeText, { color: colors.text + "80" }]}>
+                      {formatDuration(utterance.start)}
+                    </Text>
+                  </View>
+                  <Text style={[styles.utteranceText, { color: colors.text }]}>
+                    {utterance.transcript}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
         </ScrollView>
@@ -135,6 +165,37 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
 }
 
 const styles = StyleSheet.create({
+  utteranceCard: {
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  utteranceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  speakerText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  timeText: {
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  utteranceText: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
   container: {
     flex: 1,
     padding: 16,

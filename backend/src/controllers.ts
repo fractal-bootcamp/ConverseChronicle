@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 export const createRecording = async(req: CreateRequest) => {
     const {userId, recordingBody} = req;
-    const {transcript, shortSummary, allTopics, allIntents, title} = await transcribeFile(recordingBody!);
+    const {transcript, shortSummary, allTopics, allIntents, title, allUtterances} = await transcribeFile(recordingBody!);
 
     console.log(`file transcribed successfully`);
     // upload audio to supabase storage
@@ -31,7 +31,15 @@ export const createRecording = async(req: CreateRequest) => {
                     topic: topic
                 }))
             } : {},
-            duration: 60 // todo: calculate duration 
+            duration: 60, // todo: calculate duration,
+            utterances: allUtterances ? {
+                create: allUtterances!.map(utterance => ({
+                    speaker: utterance.speaker,
+                    transcript: utterance.transcript,
+                    start: utterance.start,
+                    end: utterance.end
+                }))
+            } : {}
         }
     });
     console.log(`Created recording in db successfully`);
@@ -41,7 +49,8 @@ export const createRecording = async(req: CreateRequest) => {
         transcript,
         shortSummary,
         allTopics,
-        allIntents
+        allIntents,
+        allUtterances
     };
 };
 
@@ -51,7 +60,7 @@ export const getRecording = async(req: GetRequest) => {
     
     const conversation = await prisma.conversation.findUnique({
         where: { id: id },
-        include: { topics: true }
+        include: { topics: true, utterances: true }
     });
     if (conversation) {
         const file_path = conversation?.file_path;

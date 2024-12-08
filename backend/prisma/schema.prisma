@@ -32,6 +32,17 @@ model Conversation {
   topics        Topic[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  utterances    Utterance[]
+}
+
+model Utterance {
+  id             String       @id @default(cuid())
+  speaker        String
+  transcript     String
+  start          Float
+  end            Float
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model Topic {
