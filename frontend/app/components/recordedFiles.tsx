@@ -54,7 +54,7 @@ export function RecordedFiles() {
     try {
       setError(null);
       const token = await getToken();
-      const response = await fetch(`${ENV.prod}/recordings`, {
+      const response = await fetch(`${ENV.dev}/recordings`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -76,11 +76,11 @@ export function RecordedFiles() {
     }
   };
 
-    // Pull to refresh handler
-    const onRefresh = React.useCallback(() => {
-      setRefreshing(true);
-      fetchRecordings();
-    }, []);
+  // Pull to refresh handler
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchRecordings();
+  }, []);
 
   // format the date
   const formatDate = (dateString: string) => {
@@ -92,24 +92,24 @@ export function RecordedFiles() {
       hour: 'numeric',
       minute: 'numeric',
       hour12: true // for AM/PM
-    });  
+    });
   };
 
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '--:--';
-    
+
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl 
+        <RefreshControl
           refreshing={refreshing}  // When true, shows built-in spinner
-          onRefresh={onRefresh} 
+          onRefresh={onRefresh}
         />
       }
     >
@@ -141,12 +141,12 @@ export function RecordedFiles() {
                 {formatDate(recording.createdAt)}
               </Text>
               <View style={styles.durationContainer}>
-                <Ionicons name="time-outline" size={16} color={colors.text} style={styles.timeIcon}/>
+                <Ionicons name="time-outline" size={16} color={colors.text} style={styles.timeIcon} />
                 <Text style={[styles.duration, { color: colors.text }]}>
                   {formatDuration(recording.duration)}
                 </Text>
               </View>
-             
+
             </View>
           </View>
         </TouchableOpacity>

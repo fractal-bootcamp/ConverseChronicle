@@ -1,11 +1,18 @@
 import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
+import { BatchClient } from '@speechmatics/batch-client';
 import dotenv from "dotenv";
 import { generateSummary, generateTitle } from "./llm";
 import { TranscribeResponse } from "../types";
 
 dotenv.config();
+// using deepgram
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
 const deepgram = createClient(deepgramApiKey);
+
+// using speechmatics
+const speechmaticsApiKey = process.env.SPEECHMATICS_API_KEY;
+if (!speechmaticsApiKey) throw new Error("SPEECHMATICS_API_KEY is not set");
+const speechmaticsClient = new BatchClient({apiKey: speechmaticsApiKey, appId: "converse-chronicle"});
 
 export const transcribeUrl = async (url: string) => {
   const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(
@@ -25,6 +32,42 @@ export const transcribeUrl = async (url: string) => {
   if (error) throw error;
   return processResult(result);
 };
+
+export const transcribeSpeechmatics = async (file: File) => {
+  const response = await speechmaticsClient.transcribe(
+    file,
+    {
+      "transcription_config": {
+        "diarization": "speaker",
+        "speaker_diarization_config": {
+          //"max_speakers": 3
+        },
+        "enable_entities": true,
+        "language": "en",
+        "operating_point": "enhanced",
+        "audio_filtering_config": {
+          "volume_threshold": 1
+        },
+      },
+      "summarization_config": {
+        "content_type": "conversational",
+        "summary_length": "detailed",
+        "summary_type": "bullets"
+      },
+      "topic_detection_config": {},
+    }
+  );
+  return processSpeechmaticsResult(response);
+};
+
+const processSpeechmaticsResult = async (result: any) => {
+  const transcript:any = result.results;
+  const summary: string = result.summary.content;
+  const allTopics: string[] = Object.keys(result.topics.segments.summary.overall);
+  // how do we convert an object of key value pairs into an array of strings?
+
+  return {transcript, summary, allTopics};
+}
 
 export const transcribeFile = async (audioBuffer: Buffer) => {
   const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
