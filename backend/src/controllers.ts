@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateRequest, GetRequest, ListRequest, DeleteRequest, UpdateRequest } from "./model";
-import { downloadFile, uploadBuffer } from './apis/supabase';
+import { downloadFile, generatePresignedUrl, uploadBuffer } from './apis/supabase';
 import { v4 as uuid } from 'uuid';
 import { BUCKET_NAME, FILE_EXTENSION } from './constant';
 import { transcribeFile } from './apis/transcribe';
@@ -64,10 +64,12 @@ export const getRecording = async(req: GetRequest) => {
     });
     if (conversation) {
         const file_path = conversation?.file_path;
-        const recordingBlob = await downloadFile(BUCKET_NAME, file_path);
+        //const recordingBlob = await downloadFile(BUCKET_NAME, file_path);
+        const recordingUrl = await generatePresignedUrl(BUCKET_NAME, file_path);
         return {
             ...conversation,
-            recording: recordingBlob
+            //recording: recordingBlob,
+            recordingUrl: recordingUrl
         }
     }
     return conversation;
