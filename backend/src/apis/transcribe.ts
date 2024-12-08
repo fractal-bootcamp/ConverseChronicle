@@ -10,7 +10,8 @@ const deepgram = createClient(deepgramApiKey);
 export const transcribeUrl = async (url: string) => {
   const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(
     { url: url },
-    { smart_format: true, 
+    { 
+      smart_format: true, 
       diarize: true,  // identify speaker
       punctuate:true,
       paragraphs: true,
@@ -27,20 +28,20 @@ export const transcribeUrl = async (url: string) => {
 };
 
 export const transcribeFile = async (audioBuffer: Buffer) => {
-  const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
       audioBuffer,
       {
-      model: "nova-2",
-      smart_format: true,
+        model: "nova-2",
+        smart_format: true,
+        diarize: true,  // identify speaker
+        summarize: "v2",
+        topics: true,
+        language: 'en-US',
+        intents: true,
       }
   );
   if (error) throw error;
-  try {
-    return await processResult(result);
-  } catch (error) {
-    console.error("Error processing result:", error);
-    throw error;
-  }
+  return await processResult(result);
 }
 
 const processResult = async (result: SyncPrerecordedResponse): Promise<TranscribeResponse> => {
@@ -56,7 +57,7 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
   const allIntents = intents?.segments.flatMap((segment) => 
     segment.intents?.map((intentObj)=> intentObj.intent) || []
   )?? [];
-  console.log(`transcript`, transcript);
+  //console.log(`transcript`, transcript);
   // use LLM to generate title
   const title = await generateTitle(shortSummary ? shortSummary : transcript);
 
