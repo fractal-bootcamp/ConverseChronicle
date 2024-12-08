@@ -1,7 +1,7 @@
 import { createClient, SyncPrerecordedResponse } from "@deepgram/sdk";
 import dotenv from "dotenv";
 import { generateSummary, generateTitle } from "./llm";
-import { TranscribeResponse } from "../types";
+import { TranscribeResponse, Utterance } from "../types";
 
 dotenv.config();
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
@@ -10,7 +10,8 @@ const deepgram = createClient(deepgramApiKey);
 export const transcribeUrl = async (url: string) => {
   const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(
     { url: url },
-    { smart_format: true, 
+    { 
+      smart_format: true, 
       diarize: true,  // identify speaker
       punctuate:true,
       paragraphs: true,
@@ -27,26 +28,27 @@ export const transcribeUrl = async (url: string) => {
 };
 
 export const transcribeFile = async (audioBuffer: Buffer) => {
-  const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
       audioBuffer,
       {
-      model: "nova-2",
-      smart_format: true,
+        model: "nova-2",
+        smart_format: true,
+        diarize: true,  // identify speaker
+        utterances: true,
+        summarize: "v2",
+        topics: true,
+        language: 'en-US',
+        intents: true,
       }
   );
   if (error) throw error;
-  try {
-    return await processResult(result);
-  } catch (error) {
-    console.error("Error processing result:", error);
-    throw error;
-  }
+  return await processResult(result);
 }
 
 const processResult = async (result: SyncPrerecordedResponse): Promise<TranscribeResponse> => {
   const transcript = result.results.channels[0].alternatives[0].paragraphs?.transcript || result.results.channels[0].alternatives[0].transcript;
   if (!transcript) throw new Error("No transcript found");
-  const {summary, topics, intents} = result.results
+  const {summary, topics, intents, utterances} = result.results
   // deepgram provides a summary, or use LLM to generate summary if not provided
   const shortSummary = summary?.short || await generateSummary(transcript);
 
@@ -56,7 +58,13 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
   const allIntents = intents?.segments.flatMap((segment) => 
     segment.intents?.map((intentObj)=> intentObj.intent) || []
   )?? [];
-  console.log(`transcript`, transcript);
+  const allUtterances: Utterance[] = utterances?.map(utterance => ({
+    speaker: utterance.speaker?.toString() || "",
+    transcript: utterance.transcript,
+    start: utterance.start,
+    end: utterance.end
+  } as Utterance)) || [];
+  //console.log(`transcript`, transcript);
   // use LLM to generate title
   const title = await generateTitle(shortSummary ? shortSummary : transcript);
 
@@ -65,6 +73,7 @@ const processResult = async (result: SyncPrerecordedResponse): Promise<Transcrib
       title,
       shortSummary,
       allTopics,
-      allIntents
+      allIntents,
+      allUtterances
   };
 }

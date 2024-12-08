@@ -8,10 +8,12 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { useNavigation, useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { ENV } from "../config";
 import { useAuth } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 // Custom theme colors
 const themeColors = {
@@ -35,12 +37,25 @@ interface Recording {
 
 export function RecordedFiles() {
   const { getToken } = useAuth();
+  const router = useRouter();
+
+  // dark/light mode
   const { colors } = useTheme();
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleRecordingPress = (recording: Recording) => {
+    router.push({
+      pathname: "/recording-details",
+      params: {
+        recordingId: recording.id,
+        title: recording.title,
+      },
+    });
+  };
+  // load files when the component mounts
   useEffect(() => {
     fetchRecordings();
   }, []);
@@ -107,26 +122,40 @@ export function RecordedFiles() {
       {isLoading && !refreshing && (
         <ActivityIndicator size="large" color={themeColors.orange} />
       )}
-      {error && <Text style={styles.errorText}>{error}</Text>}
 
+      {error && (
+        <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+      )}
+      {/* list the files */}
       {recordings.map((recording: Recording) => (
-        <TouchableOpacity key={recording.id} style={styles.fileItem}>
-          <Ionicons name="musical-note" size={24} color={themeColors.orange} />
-
+        <TouchableOpacity
+          key={recording.id}
+          style={[styles.fileItem, { backgroundColor: colors.card }]}
+          onPress={() => handleRecordingPress(recording)}
+        >
+          {/* <Ionicons name="musical-note" size={24} color={colors.text} /> */}
+          <FontAwesome5 name="user-friends" size={24} color="black" />
+          {/* file info */}
           <View style={styles.fileInfo}>
-            <Text style={styles.fileName}>{recording.title}</Text>
-            <Text style={styles.fileDate}>
-              {formatDate(recording.createdAt)}
+            <Text style={[styles.fileName, { color: colors.text }]}>
+              {recording.title}
             </Text>
-          </View>
-
-          <View style={styles.rightContainer}>
-            <TouchableOpacity style={styles.playButtonContainer}>
-              <Ionicons name="play" size={24} color={themeColors.orange} />
-            </TouchableOpacity>
-            <Text style={styles.duration}>
-              {formatDuration(recording.duration)}
-            </Text>
+            <View style={styles.metadataContainer}>
+              <Text style={[styles.metadata, { color: colors.text + "80" }]}>
+                {formatDate(recording.createdAt)}
+              </Text>
+              <View style={styles.durationContainer}>
+                <Ionicons
+                  name="time-outline"
+                  size={16}
+                  color={colors.text}
+                  style={styles.timeIcon}
+                />
+                <Text style={[styles.duration, { color: colors.text }]}>
+                  {formatDuration(recording.duration)}
+                </Text>
+              </View>
+            </View>
           </View>
         </TouchableOpacity>
       ))}
