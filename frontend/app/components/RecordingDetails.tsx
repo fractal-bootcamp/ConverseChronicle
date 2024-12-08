@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   metadataContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   timeIcon: {
     marginHorizontal: 4,

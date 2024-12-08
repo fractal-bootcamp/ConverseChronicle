@@ -13,6 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ENV } from "../config";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+
 
 // interface for the audio file
 interface Recording {
@@ -127,26 +129,25 @@ export function RecordedFiles() {
           style={[styles.fileItem, { backgroundColor: colors.card }]}
           onPress={() => handleRecordingPress(recording)}
         >
-          <Ionicons name="musical-note" size={24} color={colors.text} />
-
+          {/* <Ionicons name="musical-note" size={24} color={colors.text} /> */}
+          <FontAwesome5 name="user-friends" size={24} color="black" />
           {/* file info */}
           <View style={styles.fileInfo}>
             <Text style={[styles.fileName, { color: colors.text }]}>
               {recording.title}
             </Text>
-            <Text style={[styles.fileDate, { color: colors.text + "80" }]}>
-              {formatDate(recording.createdAt)}
-            </Text>
-          </View>
-
-          {/* play button */}
-          <View style={styles.rightContainer}>
-            <TouchableOpacity style={styles.playButton}>
-              <Ionicons name="play" size={24} color={colors.primary} />
-            </TouchableOpacity>
-            <Text style={[styles.duration, { color: colors.text + "80" }]}>
-              {formatDuration(recording.duration)}
-            </Text>
+            <View style={styles.metadataContainer}>
+              <Text style={[styles.metadata, { color: colors.text + "80" }]}>
+                {formatDate(recording.createdAt)}
+              </Text>
+              <View style={styles.durationContainer}>
+                <Ionicons name="time-outline" size={16} color={colors.text} style={styles.timeIcon}/>
+                <Text style={[styles.duration, { color: colors.text }]}>
+                  {formatDuration(recording.duration)}
+                </Text>
+              </View>
+             
+            </View>
           </View>
         </TouchableOpacity>
       ))}
@@ -155,14 +156,29 @@ export function RecordedFiles() {
 }
 
 const styles = StyleSheet.create({
+  metadataContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  metadata: {
+    fontSize: 12,
+  },
+  timeIcon: {
+    marginHorizontal: 4,
+  },
   rightContainer: {
     alignItems: 'center',  // Center items vertically
     justifyContent: 'center',
   },
+  durationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
   duration: {
     fontSize: 12,
-    fontWeight: '500',
-    marginTop: 4,  // Add space between play button and duration
+    marginLeft: 4
   },
   container: {
     flex: 1,
