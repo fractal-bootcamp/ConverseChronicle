@@ -9,12 +9,12 @@ const supabaseKey = process.env.SUPABASE_API_KEY;
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // created sign url for frontend to upload audio file
-export const generatePresignedUrl = async (userId: string, filename: string): Promise<string> => {
-
+export const generatePresignedUrl = async (bucketName: string=BUCKET_NAME, filePath: string): Promise<string> => {
+    console.log('filePath', filePath);
     const { data, error } = await supabase
         .storage
-        .from(BUCKET_NAME)
-        .createSignedUploadUrl(`${userId}/${filename}`);
+        .from(bucketName)
+        .createSignedUrl(filePath, 60*2) // valid for 2 minutes
 
     if (error) {
         console.error('Error creating signed upload URL:', error);
