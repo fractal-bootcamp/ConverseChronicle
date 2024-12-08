@@ -74,6 +74,7 @@ export const listRecordings = async(req: ListRequest) => {
             title: true,
             topics: true,
             createdAt: true,
+            updatedAt: true,
             duration: true
         }
     });

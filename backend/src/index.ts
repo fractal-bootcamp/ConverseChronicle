@@ -28,6 +28,7 @@ app.get('/recordings', requireAuth(), async (req: Request, res: Response): Promi
   }
   try {
     const recordingsInfo = await listRecordings({userId});
+    recordingsInfo.sort((a, b) => (b.updatedAt as any )- (a.updatedAt as any));
     return res.status(200).json({
         success: true,
         data: recordingsInfo,
