@@ -17,6 +17,7 @@ import { ENV } from "../../config";
 import HomeLayout from "@/app/(home)/_layout";
 import { Tabs, useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 
 interface Marker {
   timestamp: number;
@@ -27,10 +28,14 @@ interface AudioRecorderProps {
 }
 
 const themeColors = {
-  lightBlue: "#007AFF",
-  borderColor: "rgba(255, 255, 255, 0.1)",
-  white: "#FFFFFF",
-  background: "#121212",
+  primary: "#007AFF",
+  secondary: "#2C3E50",
+  accent: "#E67E22",
+  background: "rgba(18, 18, 18, 0.95)",
+  surface: "rgba(30, 30, 30, 0.8)",
+  border: "rgba(255, 255, 255, 0.15)",
+  text: "#FFFFFF",
+  textSecondary: "rgba(255, 255, 255, 0.7)",
 };
 
 const useRecordingStatusUpdate = () => {
@@ -179,31 +184,32 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const formData = new FormData();
       formData.append("file", {
         uri: uri,
-        name: "file",
         type: "audio/m4a",
+        name: "recording.m4a",
       } as any);
 
       const token = await getToken();
-      console.log(`token is ${token}`);
       const response = await fetch(`${ENV.prod}/recordings/create`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
         body: formData,
       });
 
       if (!response.ok) {
-        console.log(`response`, response);
         throw new Error(
-          `Failed to send recording to backend ${response.statusText}`
+          `Failed to send recording to backend: ${response.status} ${response.statusText}`
         );
       }
 
       const data = await response.json();
       console.log("Response from backend:", data);
+      return data;
     } catch (error) {
       console.error("Error sending recording to backend:", error);
+      throw error;
     }
   };
 
@@ -225,50 +231,44 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         loop
         style={styles.backgroundAnimation}
       />
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <View style={styles.container}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton, { borderBottomColor: colors.primary }]}
+            style={[styles.tabButton, styles.activeTab]}
             onPress={() => router.push("/(home)")}
           >
-            <Text style={[styles.tabText, { color: colors.primary }]}>
-              Record
-            </Text>
+            <Text style={[styles.tabText, styles.activeTabText]}>Record</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.tabButton}
             onPress={() => router.push("/(home)/files")}
           >
-            <Text style={[styles.tabText, { color: colors.text }]}>
-              Recordings
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => router.push("/(home)/editor")}
-          >
-            <Text style={[styles.tabText, { color: colors.text }]}>Notes</Text>
+            <Text style={styles.tabText}>Recordings</Text>
           </TouchableOpacity>
         </View>
-        <AudioWaveform
-          isRecording={isRecording && !isPaused}
-          time={isRecording ? formatTime(timer) : undefined}
-          bpm={120}
-          offset="00:00:00:00"
-          loudnessHistory={loudnessHistory}
-        />
-        <View style={styles.controlsContainer}>
-          {!isRecording ? (
-            <RecordButton onPress={startRecording} colors={colors} />
-          ) : (
-            <RecordingControls
-              isPaused={isPaused}
-              onPause={pauseRecording}
-              onResume={resumeRecording}
-              onStop={stopRecording}
-              colors={colors}
-            />
-          )}
+
+        <View style={styles.contentContainer}>
+          <AudioWaveform
+            isRecording={isRecording && !isPaused}
+            time={isRecording ? formatTime(timer) : undefined}
+            bpm={120}
+            offset="00:00:00:00"
+            loudnessHistory={loudnessHistory}
+          />
+
+          <View style={styles.controlsContainer}>
+            {!isRecording ? (
+              <RecordButton onPress={startRecording} colors={colors} />
+            ) : (
+              <RecordingControls
+                isPaused={isPaused}
+                onPause={pauseRecording}
+                onResume={resumeRecording}
+                onStop={stopRecording}
+                colors={colors}
+              />
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -280,19 +280,26 @@ interface ControlButtonProps {
   label: string;
   color: string;
   textColor?: string;
+  icon?: React.ReactNode;
 }
 
 const ControlButton: React.FC<ControlButtonProps> = ({
   onPress,
-  label,
   color,
-  textColor = "#fff",
+  icon,
 }) => (
   <TouchableOpacity
-    style={[styles.button, { backgroundColor: color }]}
+    style={[
+      styles.button,
+      {
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        transform: [{ scale: 1.1 }],
+      },
+    ]}
     onPress={onPress}
+    activeOpacity={0.7}
   >
-    <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
+    {icon}
   </TouchableOpacity>
 );
 
@@ -304,9 +311,9 @@ interface RecordButtonProps {
 const RecordButton: React.FC<RecordButtonProps> = ({ onPress, colors }) => (
   <ControlButton
     onPress={onPress}
-    label="Record"
     color="rgba(0, 0, 0, 0.8)"
     textColor={colors.primary}
+    icon={<FontAwesome name="microphone" size={24} color={colors.primary} />}
   />
 );
 
@@ -329,23 +336,33 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
     {!isPaused ? (
       <ControlButton
         onPress={onPause}
-        label="Pause"
         color="rgba(0, 0, 0, 0.8)"
         textColor={colors.notification}
+        icon={
+          <MaterialIcons name="pause" size={24} color={colors.notification} />
+        }
       />
     ) : (
       <ControlButton
         onPress={onResume}
-        label="Resume"
         color="rgba(0, 0, 0, 0.8)"
         textColor={colors.primary}
+        icon={
+          <MaterialIcons name="play-arrow" size={24} color={colors.primary} />
+        }
       />
     )}
     <ControlButton
       onPress={onStop}
-      label="End"
       color="rgba(0, 0, 0, 0.8)"
       textColor={colors.error || "#f44336"}
+      icon={
+        <MaterialIcons
+          name="stop"
+          size={24}
+          color={colors.error || "#f44336"}
+        />
+      }
     />
   </>
 );
@@ -353,92 +370,79 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 const styles = StyleSheet.create({
   pageContainer: {
     flex: 1,
-    // position: "fixed",
-    padding: 0,
-    margin: 4,
-    // borderWidth: 1,
-    // borderColor: "red",
+    padding: 16,
   },
   backgroundAnimation: {
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
     position: "absolute",
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
-    zIndex: -1,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: themeColors.background,
+    opacity: 0.8,
+    zIndex: -20,
   },
   container: {
-    padding: 2,
-    borderRadius: 5,
-    margin: 1,
-    backgroundColor: themeColors.lightBlue,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 20,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    flex: 1,
+    borderRadius: 26,
+    backgroundColor: themeColors.surface,
+    backdropFilter: "blur(20px)",
+    overflow: "hidden",
+    borderWidth: 0,
+    borderColor: themeColors.border,
   },
-  controlsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-    marginTop: 30,
-  },
-  button: {
-    padding: 10,
-    backgroundColor: themeColors.lightBlue,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: themeColors.borderColor,
-    minWidth: 100,
-    alignItems: "center",
-    shadowColor: themeColors.white,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  buttonText: {
-    color: themeColors.white,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1,
-  },
-  timeDisplayContainer: {
-    borderWidth: 2,
-    borderRadius: 8,
-    padding: 5,
-    marginVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  timeDisplayText: {
-    fontSize: 24,
-    fontWeight: "bold",
+  contentContainer: {
+    flex: 1,
+    padding: 16,
+    gap: 20,
   },
   tabContainer: {
     flexDirection: "row",
     justifyContent: "center",
+    gap: 4,
+    padding: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
-    gap: 10,
-    marginTop: 20,
+    borderBottomColor: themeColors.border,
   },
   tabButton: {
-    padding: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    minWidth: 100,
+    alignItems: "center",
+  },
+  activeTab: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: themeColors.border,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    letterSpacing: 1,
-    color: "#fff",
+    color: themeColors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  activeTabText: {
+    color: themeColors.text,
+  },
+  controlsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    paddingVertical: 20,
+  },
+  button: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    marginTop: -28,
+    position: "relative",
+    zIndex: 1,
   },
 });

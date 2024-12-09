@@ -14,7 +14,6 @@ import LottieView from "lottie-react-native";
 const themeColors = {
   matteBlue: "#2C3E50",
   lightBlue: "#007AFF",
-  borderColor: "rgba(255, 255, 255, 0.3)",
   white: "#FFFFFF",
 };
 
@@ -87,6 +86,13 @@ function RootLayoutNav() {
           backgroundColor: themeColors.matteBlue,
         },
         headerTintColor: themeColors.white,
+        contentStyle: {
+          backgroundColor: themeColors.matteBlue,
+          padding: 0,
+        },
+        screenOrientation: "portrait",
+        animation: "fade",
+        presentation: "modal",
       }}
     >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -94,11 +100,12 @@ function RootLayoutNav() {
     </Stack>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: themeColors.matteBlue,
+    margin: 0,
+    padding: 0,
   },
   backgroundAnimation: {
     position: "absolute",

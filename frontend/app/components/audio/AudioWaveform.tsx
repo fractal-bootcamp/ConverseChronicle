@@ -108,10 +108,10 @@ interface WaveformPoint {
 
 export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   isRecording,
-  time = "00:00:00:00",
-  bpm = "--",
-  offset = "00:00:00:00",
-  loudnessHistory = [],
+  time,
+  bpm,
+  offset,
+  loudnessHistory,
 }) => {
   const { colors } = useTheme();
 
@@ -218,7 +218,22 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
         <View style={styles.timelineOverlay} />
       </View>
 
-      <TimeDisplay time={time} colors={colors} bpm={bpm} offset={offset} />
+      {/* Time Display - Moved here */}
+      <View style={styles.timeDisplayContainer}>
+        <Text style={styles.timeDisplayText}>{time || "00:00.0"}</Text>
+      </View>
+
+      {/* Existing AudioMetrics */}
+      <AudioMetrics
+        peakLevel={-3}
+        rmsLevel={-18}
+        crestFactor={15}
+        dynamicRange={20}
+        clipCount={0}
+        lufs={-14}
+        bpm={120}
+        offset="00:00:00:00"
+      />
     </View>
   );
 };
@@ -312,40 +327,42 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   timeDisplayContainer: {
-    borderWidth: 2,
-    borderColor: themeColors.borderColor,
-    borderRadius: 12,
-    padding: 5,
-    marginVertical: 10,
-    backgroundColor: themeColors.lightBlue,
-    shadowColor: themeColors.white,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    borderRadius: 8,
+    padding: 1,
+    alignSelf: "center",
+    marginVertical: 20,
+    minWidth: 120,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
+    shadowRadius: 10,
+    elevation: 5,
   },
   timeDisplayRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    justifyContent: "center",
   },
   timeDisplayMain: {
-    flex: 2,
+    flex: 1,
+    padding: 2,
   },
   timeLabel: {
     color: themeColors.white,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: 1,
     letterSpacing: 1,
   },
   timeDisplayText: {
-    fontSize: 32,
-    fontWeight: "700",
-    fontFamily: "monospace",
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
     letterSpacing: 2,
   },
   parametersContainer: {
