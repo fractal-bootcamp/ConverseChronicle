@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from "@clerk/clerk-expo";
 import { ENV } from "../config";
-
+import { Audio } from 'expo-av';
+import { TouchableOpacity } from 'react-native';
+import * as FileSystem from "expo-file-system";
 interface Utterance {
   id: string;
   speaker: string;
@@ -22,19 +23,103 @@ interface RecordingDetailsData {
   summary?: string;
   transcript?: string;
   utterances?: Utterance[];
+  recordingUrl: string;
 }
 
 export default function RecordingDetails({recordingId}: { recordingId: string }) {
   const { colors } = useTheme();
   const { getToken } = useAuth();
   
+  // transcript and summary
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recordingDetails, setRecordingDetails] = useState<RecordingDetailsData | null>(null);
+  
+  // audio player
+  const [sound, setSound] = useState<Audio.Sound>();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
+  // audio player progress bar
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    // configure ios audio settings
+    const configureAudio = async () => {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+    };
+    configureAudio();
+  }, []);
+  
   useEffect(() => {
     fetchRecordingDetails();
   }, []);
+
+  useEffect(() => {
+    if (recordingDetails?.recordingUrl) {
+      downloadAudio(recordingDetails.recordingUrl);
+    }
+  }, [recordingDetails?.recordingUrl]);
+
+  // unload audio when component unmounts
+  useEffect(() => {
+    return sound ? () => { sound.unloadAsync(); } : undefined;
+  }, [sound]);
+
+  const downloadAudio = async (url: string) => {
+    try {
+      setIsLoadingAudio(true);
+      const fileUri = FileSystem.documentDirectory + recordingDetails!.id + '.m4a';
+      console.log(`fileUri`, fileUri);
+      await FileSystem.downloadAsync(url, fileUri);
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: fileUri },
+        { shouldPlay: false },
+        (status) => {
+          // Update position and duration when playback status changes
+          if (status.isLoaded) {
+            setPosition(status.positionMillis);
+            setDuration(status.durationMillis || 0);
+          }
+          if (status.isLoaded && status.didJustFinish) {
+            setIsPlaying(false);
+          }
+        }
+      );
+      setSound(newSound);
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  };
+
+  const playRecording = async () => {
+    try {
+      if (sound) {
+        if (isPlaying) {
+          console.log(`pausing sound`);
+          await sound.pauseAsync();
+          setIsPlaying(false);
+        } else {
+          console.log(`playing sound`);
+          await sound.playAsync();
+          setIsPlaying(true);
+        }
+      } else {
+        console.log(`no sound to play`);
+      }
+    } catch (error) {
+      console.error('Error playing recording:', error);
+    }
+  };
 
   const fetchRecordingDetails = async () => {
     try {
@@ -81,6 +166,14 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
+  // for audio player progress bar
+  const formatTime = (millis: number) => {
+    const minutes = Math.floor(millis / 60000);
+    const seconds = Math.floor((millis % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const isUtterances = recordingDetails?.utterances && recordingDetails.utterances.length > 0;
 
   return (
     <>
@@ -93,6 +186,7 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
           <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
         </View>
       ) : recordingDetails ? (
+        <>
         <ScrollView style={styles.container}>
           {/* Header Section */}
           <View style={styles.headerSection}>
@@ -126,18 +220,6 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
             </View>
           )}
 
-          {/* Transcript Section */}
-          {/* {recordingDetails.transcript && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript</Text>
-              <View style={[styles.card, { backgroundColor: colors.card }]}>
-                <Text style={[styles.sectionContent, { color: colors.text }]}>
-                  {recordingDetails.transcript}
-                </Text>
-              </View>
-            </View>
-          )} */}
-
           {recordingDetails.utterances && recordingDetails.utterances.length > 0 && (
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Conversation</Text>
@@ -158,13 +240,90 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
               ))}
             </View>
           )}
+
+          {!isUtterances && recordingDetails.transcript && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript</Text>
+              <View style={[styles.card, { backgroundColor: colors.card }]}>
+                <Text style={[styles.sectionContent, { color: colors.text }]}>
+                  {recordingDetails.transcript}
+                </Text>
+              </View>
+            </View>
+          )}
         </ScrollView>
+        <View style={[styles.playerContainer, { backgroundColor: colors.card }]}>
+        <TouchableOpacity onPress={playRecording}>
+          <Ionicons 
+            name={isLoadingAudio ? "hourglass-outline" : isPlaying ? "pause-circle" : "play-circle"} 
+            size={48} 
+            color={colors.primary} 
+          />
+        </TouchableOpacity>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progress, 
+                { 
+                  width: `${(position / duration) * 100}%`,
+                  backgroundColor: colors.primary 
+                }
+              ]} 
+            />
+          </View>
+          <View style={styles.timeContainer}>
+            <Text style={[styles.timeText, { color: colors.text }]}>
+              {formatTime(position)}
+            </Text>
+            <Text style={[styles.timeText, { color: colors.text }]}>
+              {formatTime(duration)}
+            </Text>
+          </View>
+        </View>
+      </View>
+      </>
       ) : null}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  playerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  progressContainer: {
+    flex: 1,
+    marginTop: 16,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progress: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  timeText: {
+    fontSize: 12,
+  },
   utteranceCard: {
     padding: 12,
     borderRadius: 12,
