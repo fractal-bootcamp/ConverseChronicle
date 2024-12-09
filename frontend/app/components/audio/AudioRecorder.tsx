@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: themeColors.border,
-    marginTop: -28,
+    marginTop: -10,
     position: "relative",
     zIndex: 1,
   },

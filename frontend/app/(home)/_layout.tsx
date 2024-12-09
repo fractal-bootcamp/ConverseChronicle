@@ -13,6 +13,7 @@ export default function HomeLayout() {
         headerRight: () => <AppHeader title="" />,
         headerStyle: {
           height: 120,
+          backgroundColor: "#E1F0FF", // Light blue background for header
         },
         headerTitleStyle: {
           fontSize: 20,
@@ -20,7 +21,8 @@ export default function HomeLayout() {
         tabBarStyle: {
           height: 95, // Increased height from default ~50
           paddingBottom: 10, // Add some padding at bottom for comfort
-          paddingTop: 15, // Add some padding at top
+          paddingTop: 10, // Add some padding at top
+          backgroundColor: "#E1F0FF", // Light blue background for tab bar
         },
       }}
     >
