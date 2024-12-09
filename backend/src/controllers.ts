@@ -1,15 +1,34 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateRequest, GetRequest, ListRequest, DeleteRequest, UpdateRequest } from "./model";
-import { downloadFile, uploadBuffer } from './apis/supabase';
+import { downloadFile, generatePresignedUrl, uploadBuffer } from './apis/supabase';
 import { v4 as uuid } from 'uuid';
 import { BUCKET_NAME, FILE_EXTENSION } from './constant';
-import { transcribeFile } from './apis/transcribe';
+import { transcribeFile, transcribeSpeechmatics } from './apis/transcribe';
+import { getAudioDurationInSeconds } from 'get-audio-duration';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 const prisma = new PrismaClient();
 
 export const createRecording = async(req: CreateRequest) => {
     const {userId, recordingBody} = req;
-    const {transcript, shortSummary, allTopics, allIntents, title, allUtterances} = await transcribeFile(recordingBody!);
+    
+    // Get audio duration from buffer using system temp directory
+    const tempFilePath = join(tmpdir(), `${uuid()}${FILE_EXTENSION}`);
+    await require('fs').promises.writeFile(tempFilePath, recordingBody);
+    const durationInSeconds = Math.round(await getAudioDurationInSeconds(tempFilePath));
+    console.log(`durationInSeconds: `, durationInSeconds);
+    await require('fs').promises.unlink(tempFilePath); // Clean up temp file
+    
+    // Get the full conversation object with speaker information
+    const {conversation, summary, title} = await transcribeSpeechmatics(recordingBody!);
+    
+    // Instead of joining messages directly, format them with speaker information
+    const transcript = conversation.map(item => 
+        `${item.speaker}:\n${item.message}\n`
+    ).join("\n");
+    
+    const allTopics: string[] = [];
 
     console.log(`file transcribed successfully`);
     // upload audio to supabase storage
@@ -25,21 +44,13 @@ export const createRecording = async(req: CreateRequest) => {
             recording_url: "", // todo: add recording url
             file_path: filePath, 
             transcript: transcript,
-            summary: shortSummary ?? "",
+            summary: summary ?? "",
             topics: allTopics ? {
                 create: allTopics!.map(topic => ({
                     topic: topic
                 }))
             } : {},
-            duration: 60, // todo: calculate duration,
-            utterances: allUtterances ? {
-                create: allUtterances!.map(utterance => ({
-                    speaker: utterance.speaker,
-                    transcript: utterance.transcript,
-                    start: utterance.start,
-                    end: utterance.end
-                }))
-            } : {}
+            duration: durationInSeconds
         }
     });
     console.log(`Created recording in db successfully`);
@@ -47,10 +58,8 @@ export const createRecording = async(req: CreateRequest) => {
         ...newRecording,
         filePath,
         transcript,
-        shortSummary,
+        summary,
         allTopics,
-        allIntents,
-        allUtterances
     };
 };
 
@@ -60,14 +69,15 @@ export const getRecording = async(req: GetRequest) => {
     
     const conversation = await prisma.conversation.findUnique({
         where: { id: id },
-        include: { topics: true, utterances: true }
+        include: { topics: true }
     });
     if (conversation) {
         const file_path = conversation?.file_path;
-        const recordingBlob = await downloadFile(BUCKET_NAME, file_path);
+        //const recordingBlob = await downloadFile(BUCKET_NAME, file_path);
+        const recordingUrl = await generatePresignedUrl(BUCKET_NAME, file_path);
         return {
             ...conversation,
-            recording: recordingBlob
+            recordingUrl: recordingUrl
         }
     }
     return conversation;
