@@ -15,6 +15,9 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import LottieView from "lottie-react-native";
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import Animated from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { themeColors } from "../colors";
 
 // interface for the audio file
@@ -104,77 +107,119 @@ export function RecordedFiles() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  return (
-    <View style={styles.pageContainer}>
-      <LottieView
-        source={require("@/assets/animations/background-sparkles.json")}
-        autoPlay
-        loop
-        style={styles.backgroundAnimation}
-      />
-      <View style={styles.container}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => router.push("/(home)")}
-          >
-            <Text style={styles.tabText}>Record</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabButton, styles.activeTab]}
-            onPress={() => router.push("/(home)/files")}
-          >
-            <Text style={[styles.tabText, styles.activeTabText]}>
-              Recordings
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.contentContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
+  const renderRightActions = (recordingId: string) => {
+    return (
+      <Animated.View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDelete(recordingId)}
         >
-          {isLoading && !refreshing && (
-            <ActivityIndicator size="large" color={themeColors.primary} />
-          )}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          {recordings.map((recording: Recording) => (
+          <Ionicons name="trash-outline" size={24} color="white" />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const handleDelete = async (recordingId: string) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`${ENV.prod}/recordings/${recordingId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete recording');
+      }
+
+      // Remove the deleted recording from state
+      setRecordings(recordings.filter(rec => rec.id !== recordingId));
+    } catch (error) {
+      console.error('Error deleting recording:', error);
+      setError('Failed to delete recording');
+    }
+  };
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.pageContainer}>
+        <LottieView
+          source={require("@/assets/animations/background-sparkles.json")}
+          autoPlay
+          loop
+          style={styles.backgroundAnimation}
+        />
+        <View style={styles.container}>
+          <View style={styles.tabContainer}>
             <TouchableOpacity
-              key={recording.id}
-              style={styles.fileItem}
-              onPress={() => handleRecordingPress(recording)}
+              style={styles.tabButton}
+              onPress={() => router.push("/(home)")}
             >
-              <FontAwesome5
-                name="user-friends"
-                size={24}
-                color={themeColors.text}
-              />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileName}>{recording.title}</Text>
-                <View style={styles.metadataContainer}>
-                  <Text style={styles.metadata}>
-                    {formatDate(recording.createdAt)}
-                  </Text>
-                  <View style={styles.durationContainer}>
-                    <Ionicons
-                      name="time-outline"
-                      size={16}
-                      color={themeColors.textSecondary}
-                      style={styles.timeIcon}
-                    />
-                    <Text style={styles.duration}>
-                      {formatDuration(recording.duration)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+              <Text style={styles.tabText}>Record</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            <TouchableOpacity
+              style={[styles.tabButton, styles.activeTab]}
+              onPress={() => router.push("/(home)/files")}
+            >
+              <Text style={[styles.tabText, styles.activeTabText]}>
+                Recordings
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.contentContainer}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
+            {isLoading && !refreshing && (
+              <ActivityIndicator size="large" color={themeColors.primary} />
+            )}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+            {recordings.map((recording: Recording) => (
+              <Swipeable
+                key={recording.id}
+                renderRightActions={() => renderRightActions(recording.id)}
+                rightThreshold={40}
+              >
+                <TouchableOpacity
+                  style={styles.fileItem}
+                  onPress={() => handleRecordingPress(recording)}
+                >
+                  <FontAwesome5
+                    name="user-friends"
+                    size={24}
+                    color={themeColors.text}
+                  />
+                  <View style={styles.fileInfo}>
+                    <Text style={styles.fileName}>{recording.title}</Text>
+                    <View style={styles.metadataContainer}>
+                      <Text style={styles.metadata}>
+                        {formatDate(recording.createdAt)}
+                      </Text>
+                      <View style={styles.durationContainer}>
+                        <Ionicons
+                          name="time-outline"
+                          size={16}
+                          color={themeColors.textSecondary}
+                          style={styles.timeIcon}
+                        />
+                        <Text style={styles.duration}>
+                          {formatDuration(recording.duration)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Swipeable>
+            ))}
+          </ScrollView>
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -283,5 +328,14 @@ const styles = StyleSheet.create({
   },
   timeIcon: {
     marginRight: 4,
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+    height: '85%',
+    borderRadius: 15,
+    marginLeft: 10,
   },
 });
