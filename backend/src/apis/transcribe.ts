@@ -33,9 +33,15 @@ export const transcribeUrl = async (url: string) => {
   return processResult(result);
 };
 
-export const transcribeSpeechmatics = async (file: File) => {
+export const transcribeSpeechmatics = async (file: Buffer) => {
+  const blob = new Blob([file], { type: 'audio/m4a' });
+  const input = {
+    data: blob,
+    fileName: `audio-${Date.now()}.m4a`
+  };
+  
   const response = await speechmaticsClient.transcribe(
-    file,
+    input,
     {
       "transcription_config": {
         "diarization": "speaker",
@@ -61,12 +67,56 @@ export const transcribeSpeechmatics = async (file: File) => {
 };
 
 const processSpeechmaticsResult = async (result: any) => {
-  const transcript:any = result.results;
-  const summary: string = result.summary.content;
-  const allTopics: string[] = Object.keys(result.topics.segments.summary.overall);
-  // how do we convert an object of key value pairs into an array of strings?
+  const transcript = result.results;
+  console.log(`transcript: `, transcript);
+  
+  // Build conversation array
+  const conversation = [];
+  let currentSpeaker = '';
+  let currentMessage = '';
+  
+  for (const item of transcript) {
+    if (item.alternatives && item.alternatives[0]) {
+      const { content, speaker } = item.alternatives[0];
+      
+      // Start new message when speaker changes
+      if (speaker !== currentSpeaker && currentMessage) {
+        conversation.push({
+          speaker: currentSpeaker,
+          message: currentMessage.trim()
+        });
+        currentMessage = '';
+      }
+      
+      currentSpeaker = speaker;
+      
+      // Handle punctuation
+      if (item.type === 'punctuation') {
+        currentMessage += content;
+      } else {
+        currentMessage += (currentMessage ? ' ' : '') + content;
+      }
+    }
+  }
+  
+  // Add final message
+  if (currentMessage) {
+    conversation.push({
+      speaker: currentSpeaker,
+      message: currentMessage.trim()
+    });
+  }
 
-  return {transcript, summary, allTopics};
+  const summary = result.summary.content;
+  // use LLM to generate title
+  const title = await generateTitle(summary ? summary : transcript);
+  console.log(`summary: `, summary);
+  
+  return {
+    conversation,
+    summary,
+    title
+  };
 }
 
 export const transcribeFile = async (audioBuffer: Buffer) => {

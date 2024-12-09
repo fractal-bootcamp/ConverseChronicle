@@ -3,13 +3,21 @@ import { CreateRequest, GetRequest, ListRequest, DeleteRequest, UpdateRequest } 
 import { downloadFile, uploadBuffer } from './apis/supabase';
 import { v4 as uuid } from 'uuid';
 import { BUCKET_NAME, FILE_EXTENSION } from './constant';
-import { transcribeFile } from './apis/transcribe';
+import { transcribeFile, transcribeSpeechmatics } from './apis/transcribe';
 
 const prisma = new PrismaClient();
 
 export const createRecording = async(req: CreateRequest) => {
     const {userId, recordingBody} = req;
-    const {transcript, shortSummary, allTopics, allIntents, title} = await transcribeFile(recordingBody!);
+    // Get the full conversation object with speaker information
+    const {conversation, summary, title} = await transcribeSpeechmatics(recordingBody!);
+    
+    // Instead of joining messages directly, format them with speaker information
+    const transcript = conversation.map(item => 
+        `${item.speaker}:\n${item.message}\n`
+    ).join("\n");
+    
+    const allTopics: string[] = [];
 
     console.log(`file transcribed successfully`);
     // upload audio to supabase storage
@@ -25,7 +33,7 @@ export const createRecording = async(req: CreateRequest) => {
             recording_url: "", // todo: add recording url
             file_path: filePath, 
             transcript: transcript,
-            summary: shortSummary ?? "",
+            summary: summary ?? "",
             topics: allTopics ? {
                 create: allTopics!.map(topic => ({
                     topic: topic
@@ -39,9 +47,8 @@ export const createRecording = async(req: CreateRequest) => {
         ...newRecording,
         filePath,
         transcript,
-        shortSummary,
+        summary,
         allTopics,
-        allIntents
     };
 };
 
