@@ -8,7 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation, useTheme } from "@react-navigation/native";
+import { useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { ENV } from "../config";
 import { useAuth } from "@clerk/clerk-expo";
@@ -164,6 +164,26 @@ export function RecordedFiles() {
 }
 
 const styles = StyleSheet.create({
+  metadataContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  metadata: {
+    fontSize: 12,
+  },
+  timeIcon: {
+    marginHorizontal: 4,
+  },
+  durationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  duration: {
+    fontSize: 12,
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -221,13 +241,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: themeColors.borderColor,
   },
-  duration: {
-    fontSize: 12,
-    fontWeight: "500",
-    marginTop: 4,
-    color: themeColors.white + "80",
-    letterSpacing: 0.5,
-  },
+  
   errorText: {
     textAlign: "center",
     marginVertical: 20,

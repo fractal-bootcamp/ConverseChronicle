@@ -60,7 +60,6 @@ app.get('/recordings/:recording_id', requireAuth(), async (req: Request, res: Re
     if (!recording) {
       return res.status(404).json({ error: `Recording ${recordingId} not found` });
     }
-    console.log('recording', recording);
     return res.status(200).json({
         success: true,
         data: recording,

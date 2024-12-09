@@ -66,7 +66,6 @@ export const getRecording = async(req: GetRequest) => {
         const recordingUrl = await generatePresignedUrl(BUCKET_NAME, file_path);
         return {
             ...conversation,
-            //recording: recordingBlob,
             recordingUrl: recordingUrl
         }
     }
