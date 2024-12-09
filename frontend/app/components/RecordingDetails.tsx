@@ -40,12 +40,12 @@ export default function RecordingDetails({
 }) {
   const { colors } = useTheme();
   const { getToken } = useAuth();
-  
+
   // transcript and summary
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recordingDetails, setRecordingDetails] = useState<RecordingDetailsData | null>(null);
-  
+
   // audio player
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -68,7 +68,7 @@ export default function RecordingDetails({
     };
     configureAudio();
   }, []);
-  
+
   useEffect(() => {
     fetchRecordingDetails();
   }, []);
@@ -199,136 +199,172 @@ export default function RecordingDetails({
           </Text>
         </View>
       ) : recordingDetails ? (
-        <ScrollView
-          style={[styles.container, { backgroundColor: colors.background }]}
-        >
-          {/* Header Section */}
-          <View style={styles.headerSection}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {recordingDetails.title}
-            </Text>
-            <View style={styles.metadataContainer}>
-              <View style={styles.dateTimeContainer}>
-                <Text style={[styles.metadata, { color: colors.text + "80" }]}>
-                  {formatDate(recordingDetails.createdAt)}
-                </Text>
-              </View>
-              <View style={styles.durationContainer}>
-                <Ionicons
-                  name="time-outline"
-                  size={16}
-                  color={colors.text + "80"}
-                  style={styles.timeIcon}
-                />
-                <Text style={[styles.duration, { color: colors.text + "80" }]}>
-                  {formatDuration(recordingDetails.duration)}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Summary Section */}
-          {recordingDetails.summary && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Summary
+        <>
+          <ScrollView
+            style={[styles.container, { backgroundColor: colors.background }]}
+          >
+            {/* Header Section */}
+            <View style={styles.headerSection}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                {recordingDetails.title}
               </Text>
-              <View
-                style={[
-                  styles.card,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    borderWidth: 1,
-                  },
-                ]}
-              >
-                <Text style={[styles.sectionContent, { color: colors.text }]}>
-                  {recordingDetails.summary}
-                </Text>
+              <View style={styles.metadataContainer}>
+                <View style={styles.dateTimeContainer}>
+                  <Text style={[styles.metadata, { color: colors.text + "80" }]}>
+                    {formatDate(recordingDetails.createdAt)}
+                  </Text>
+                </View>
+                <View style={styles.durationContainer}>
+                  <Ionicons
+                    name="time-outline"
+                    size={16}
+                    color={colors.text + "80"}
+                    style={styles.timeIcon}
+                  />
+                  <Text style={[styles.duration, { color: colors.text + "80" }]}>
+                    {formatDuration(recordingDetails.duration)}
+                  </Text>
+                </View>
               </View>
             </View>
-          )}
 
-          {/* Utterances Section */}
-          {recordingDetails.utterances &&
-            recordingDetails.utterances.length > 0 && (
+            {/* Summary Section */}
+            {recordingDetails.summary && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Conversation
+                  Summary
                 </Text>
-                {recordingDetails.utterances.map((utterance, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.card,
-                      {
-                        backgroundColor: colors.card,
-                        borderColor: colors.border,
-                        borderWidth: 1,
-                      },
-                    ]}
-                  >
-                    <View style={styles.utteranceHeader}>
-                      <Text
-                        style={[styles.speakerText, { color: colors.text }]}
-                      >
-                        Speaker {utterance.speaker}
-                      </Text>
-                      <Text
-                        style={[styles.timeText, { color: colors.text + "80" }]}
-                      >
-                        {formatDuration(utterance.start)}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[styles.utteranceText, { color: colors.text }]}
-                    >
-                      {utterance.transcript}
-                    </Text>
-                  </View>
-                ))}
+                <View
+                  style={[
+                    styles.card,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      borderWidth: 1,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.sectionContent, { color: colors.text }]}>
+                    {recordingDetails.summary}
+                  </Text>
+                </View>
               </View>
             )}
-          
-        </ScrollView>
-        <View style={[styles.playerContainer, { backgroundColor: colors.card }]}>
-        <TouchableOpacity onPress={playRecording}>
-          <Ionicons 
-            name={isLoadingAudio ? "hourglass-outline" : isPlaying ? "pause-circle" : "play-circle"} 
-            size={48} 
-            color={colors.primary} 
-          />
-        </TouchableOpacity>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progress, 
-                { 
-                  width: `${(position / duration) * 100}%`,
-                  backgroundColor: colors.primary 
-                }
-              ]} 
-            />
+
+            {/* Utterances Section */}
+            {recordingDetails.utterances &&
+              recordingDetails.utterances.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    Conversation
+                  </Text>
+                  {recordingDetails.utterances.map((utterance, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.card,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          borderWidth: 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.utteranceHeader}>
+                        <Text
+                          style={[styles.speakerText, { color: colors.text }]}
+                        >
+                          Speaker {utterance.speaker}
+                        </Text>
+                        <Text
+                          style={[styles.timeText, { color: colors.text + "80" }]}
+                        >
+                          {formatDuration(utterance.start)}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.utteranceText, { color: colors.text }]}
+                      >
+                        {utterance.transcript}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+          </ScrollView>
+          <View style={[styles.playerContainer, { backgroundColor: colors.card }]}>
+            <TouchableOpacity onPress={playRecording}>
+              <Ionicons
+                name={isLoadingAudio ? "hourglass-outline" : isPlaying ? "pause-circle" : "play-circle"}
+                size={48}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progress,
+                    {
+                      width: `${(position / duration) * 100}%`,
+                      backgroundColor: colors.primary
+                    }
+                  ]}
+                />
+              </View>
+              <View style={styles.timeContainer}>
+                <Text style={[styles.timeText, { color: colors.text }]}>
+                  {formatTime(position)}
+                </Text>
+                <Text style={[styles.timeText, { color: colors.text }]}>
+                  {formatTime(duration)}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.timeContainer}>
-            <Text style={[styles.timeText, { color: colors.text }]}>
-              {formatTime(position)}
-            </Text>
-            <Text style={[styles.timeText, { color: colors.text }]}>
-              {formatTime(duration)}
-            </Text>
-          </View>
-        </View>
-      </View>
-      </>
+        </>
       ) : null}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  playerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  progressContainer: {
+    flex: 1,
+    marginTop: 16,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progress: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  timeText: {
+    fontSize: 12,
+  },
   container: {
     flex: 1,
     padding: 20,
