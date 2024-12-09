@@ -1,1 +1,0 @@
-// popup with the transcription - you can edit the transcription and save it

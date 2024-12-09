@@ -14,17 +14,7 @@ import { ENV } from "../config";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-
-// Custom theme colors
-const themeColors = {
-  matteBlue: "#2C3E50",
-  lightBlue: "#34495E",
-  orange: "#E67E22",
-  lightOrange: "#F39C12",
-  white: "#FFFFFF",
-  darkGray: "#1a1a1a",
-  borderColor: "rgba(255, 255, 255, 0.3)",
-};
+import LottieView from "lottie-react-native";
 
 // interface for the audio file
 interface Recording {
@@ -32,8 +22,20 @@ interface Recording {
   createdAt: string;
   title: string;
   duration?: number;
-  topics?: string[];
+  topics?: string[]; // todo: display this under title ?
 }
+
+// Update themeColors to match AudioRecorder
+const themeColors = {
+  primary: "#007AFF",
+  secondary: "#2C3E50",
+  accent: "#E67E22",
+  background: "rgba(18, 18, 18, 0.95)",
+  surface: "rgba(30, 30, 30, 0.8)",
+  border: "rgba(255, 255, 255, 0.15)",
+  text: "#FFFFFF",
+  textSecondary: "rgba(255, 255, 255, 0.7)",
+};
 
 export function RecordedFiles() {
   const { getToken } = useAuth();
@@ -86,20 +88,22 @@ export function RecordedFiles() {
     }
   };
 
+  // Pull to refresh handler
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     fetchRecordings();
   }, []);
 
+  // format the date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
-      weekday: "long",
+      weekday: "long", // "Monday"
       month: "long",
       day: "numeric",
       hour: "numeric",
       minute: "numeric",
-      hour12: true,
+      hour12: true, // for AM/PM
     });
   };
 
@@ -112,89 +116,135 @@ export function RecordedFiles() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <Text style={styles.title}>Your Recordings</Text>
-      {isLoading && !refreshing && (
-        <ActivityIndicator size="large" color={themeColors.orange} />
-      )}
-
-      {error && (
-        <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-      )}
-      {/* list the files */}
-      {recordings.map((recording: Recording) => (
-        <TouchableOpacity
-          key={recording.id}
-          style={[styles.fileItem, { backgroundColor: colors.card }]}
-          onPress={() => handleRecordingPress(recording)}
-        >
-          {/* <Ionicons name="musical-note" size={24} color={colors.text} /> */}
-          <FontAwesome5 name="user-friends" size={24} color="black" />
-          {/* file info */}
-          <View style={styles.fileInfo}>
-            <Text style={[styles.fileName, { color: colors.text }]}>
-              {recording.title}
+    <View style={styles.pageContainer}>
+      <LottieView
+        source={require("@/assets/animations/background-sparkles.json")}
+        autoPlay
+        loop
+        style={styles.backgroundAnimation}
+      />
+      <View style={styles.container}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => router.push("/(home)")}
+          >
+            <Text style={styles.tabText}>Record</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabButton, styles.activeTab]}
+            onPress={() => router.push("/(home)/files")}
+          >
+            <Text style={[styles.tabText, styles.activeTabText]}>
+              Recordings
             </Text>
-            <View style={styles.metadataContainer}>
-              <Text style={[styles.metadata, { color: colors.text + "80" }]}>
-                {formatDate(recording.createdAt)}
-              </Text>
-              <View style={styles.durationContainer}>
-                <Ionicons
-                  name="time-outline"
-                  size={16}
-                  color={colors.text}
-                  style={styles.timeIcon}
-                />
-                <Text style={[styles.duration, { color: colors.text }]}>
-                  {formatDuration(recording.duration)}
-                </Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.contentContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {isLoading && !refreshing && (
+            <ActivityIndicator size="large" color={themeColors.primary} />
+          )}
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          {recordings.map((recording: Recording) => (
+            <TouchableOpacity
+              key={recording.id}
+              style={styles.fileItem}
+              onPress={() => handleRecordingPress(recording)}
+            >
+              <FontAwesome5
+                name="user-friends"
+                size={24}
+                color={themeColors.text}
+              />
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileName}>{recording.title}</Text>
+                <View style={styles.metadataContainer}>
+                  <Text style={styles.metadata}>
+                    {formatDate(recording.createdAt)}
+                  </Text>
+                  <View style={styles.durationContainer}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={themeColors.textSecondary}
+                      style={styles.timeIcon}
+                    />
+                    <Text style={styles.duration}>
+                      {formatDuration(recording.duration)}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  metadataContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
+  pageContainer: {
+    flex: 1,
+    padding: 16,
   },
-  metadata: {
-    fontSize: 12,
-  },
-  timeIcon: {
-    marginHorizontal: 4,
-  },
-  durationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  duration: {
-    fontSize: 12,
-    marginTop: 4,
+  backgroundAnimation: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: themeColors.background,
+    opacity: 0.8,
+    zIndex: -20,
   },
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: themeColors.matteBlue,
+    borderRadius: 26,
+    backgroundColor: themeColors.surface,
+    overflow: "hidden",
+    borderWidth: 0,
+    borderColor: themeColors.border,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: themeColors.white,
-    letterSpacing: 1,
+  contentContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 4,
+    padding: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.border,
+  },
+  tabButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  activeTab: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: themeColors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  activeTabText: {
+    color: themeColors.text,
   },
   fileItem: {
     flexDirection: "row",
@@ -202,17 +252,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
-    backgroundColor: themeColors.lightBlue,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderWidth: 1,
-    borderColor: themeColors.borderColor,
-    shadowColor: themeColors.white,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
+    borderColor: themeColors.border,
   },
   fileInfo: {
     flex: 1,
@@ -221,32 +263,36 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 16,
     fontWeight: "600",
-    color: themeColors.white,
+    color: themeColors.text,
     letterSpacing: 0.5,
   },
-  fileDate: {
+  metadata: {
     fontSize: 12,
-    marginTop: 4,
-    color: themeColors.white + "80",
+    color: themeColors.textSecondary,
     letterSpacing: 0.5,
   },
-  rightContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+  duration: {
+    fontSize: 12,
+    color: themeColors.textSecondary,
+    letterSpacing: 0.5,
   },
-  playButtonContainer: {
-    padding: 8,
-    backgroundColor: `${themeColors.lightBlue}40`,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: themeColors.borderColor,
-  },
-  
   errorText: {
     textAlign: "center",
     marginVertical: 20,
     fontSize: 16,
-    color: themeColors.orange,
+    color: themeColors.accent,
     letterSpacing: 0.5,
+  },
+  metadataContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  durationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  timeIcon: {
+    marginRight: 4,
   },
 });

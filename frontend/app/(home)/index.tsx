@@ -4,7 +4,7 @@ import { AudioRecorder } from "@/app/components/audio/AudioRecorder";
 
 export default function RecordScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+    <View style={{ flex: 1, justifyContent: "center" }}>
       <AudioRecorder onRecordingComplete={(uri) => console.log(uri)} />
     </View>
   );

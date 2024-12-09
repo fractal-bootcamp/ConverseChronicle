@@ -1,7 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { useLocalSearchParams, Stack } from "expo-router";
+import { useTheme } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@clerk/clerk-expo";
 import { ENV } from "../config";
 import { Audio } from 'expo-av';
@@ -26,7 +33,11 @@ interface RecordingDetailsData {
   recordingUrl: string;
 }
 
-export default function RecordingDetails({recordingId}: { recordingId: string }) {
+export default function RecordingDetails({
+  recordingId,
+}: {
+  recordingId: string;
+}) {
   const { colors } = useTheme();
   const { getToken } = useAuth();
   
@@ -125,25 +136,25 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const token = await getToken();
       const response = await fetch(`${ENV.prod}/recordings/${recordingId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch recording details');
+        throw new Error("Failed to fetch recording details");
       }
 
       const data = await response.json();
       console.log(`recording details`, data);
       setRecordingDetails(data.data);
     } catch (error) {
-      console.error('Error fetching recording details:', error);
-      setError('Failed to load recording details');
+      console.error("Error fetching recording details:", error);
+      setError("Failed to load recording details");
     } finally {
       setIsLoading(false);
     }
@@ -151,20 +162,20 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long', // "Monday"
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true // for AM/PM
-    });  
+    return date.toLocaleDateString("en-US", {
+      weekday: "long", // "Monday"
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true, // for AM/PM
+    });
   };
 
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
   // for audio player progress bar
   const formatTime = (millis: number) => {
@@ -183,11 +194,14 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
-          <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+          <Text style={[styles.errorText, { color: colors.text }]}>
+            {error}
+          </Text>
         </View>
       ) : recordingDetails ? (
-        <>
-        <ScrollView style={styles.container}>
+        <ScrollView
+          style={[styles.container, { backgroundColor: colors.background }]}
+        >
           {/* Header Section */}
           <View style={styles.headerSection}>
             <Text style={[styles.title, { color: colors.text }]}>
@@ -195,13 +209,18 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
             </Text>
             <View style={styles.metadataContainer}>
               <View style={styles.dateTimeContainer}>
-                <Text style={[styles.dateTime, { color: colors.text }]}>
-                    {formatDate(recordingDetails.createdAt)}
+                <Text style={[styles.metadata, { color: colors.text + "80" }]}>
+                  {formatDate(recordingDetails.createdAt)}
                 </Text>
               </View>
               <View style={styles.durationContainer}>
-                <Ionicons name="time-outline" size={16} color={colors.text} style={styles.timeIcon}/>
-                <Text style={[styles.duration, { color: colors.text }]}>
+                <Ionicons
+                  name="time-outline"
+                  size={16}
+                  color={colors.text + "80"}
+                  style={styles.timeIcon}
+                />
+                <Text style={[styles.duration, { color: colors.text + "80" }]}>
                   {formatDuration(recordingDetails.duration)}
                 </Text>
               </View>
@@ -211,8 +230,19 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
           {/* Summary Section */}
           {recordingDetails.summary && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Summary</Text>
-              <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Summary
+              </Text>
+              <View
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    borderWidth: 1,
+                  },
+                ]}
+              >
                 <Text style={[styles.sectionContent, { color: colors.text }]}>
                   {recordingDetails.summary}
                 </Text>
@@ -220,37 +250,47 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
             </View>
           )}
 
-          {recordingDetails.utterances && recordingDetails.utterances.length > 0 && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Conversation</Text>
-              {recordingDetails.utterances.map((utterance, index) => (
-                <View key={index} style={[styles.utteranceCard, { backgroundColor: colors.card }]}>
-                  <View style={styles.utteranceHeader}>
-                    <Text style={[styles.speakerText, { color: colors.text }]}>
-                      Speaker {utterance.speaker}
-                    </Text>
-                    <Text style={[styles.timeText, { color: colors.text + "80" }]}>
-                      {formatDuration(utterance.start)}
+          {/* Utterances Section */}
+          {recordingDetails.utterances &&
+            recordingDetails.utterances.length > 0 && (
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  Conversation
+                </Text>
+                {recordingDetails.utterances.map((utterance, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.card,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        borderWidth: 1,
+                      },
+                    ]}
+                  >
+                    <View style={styles.utteranceHeader}>
+                      <Text
+                        style={[styles.speakerText, { color: colors.text }]}
+                      >
+                        Speaker {utterance.speaker}
+                      </Text>
+                      <Text
+                        style={[styles.timeText, { color: colors.text + "80" }]}
+                      >
+                        {formatDuration(utterance.start)}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[styles.utteranceText, { color: colors.text }]}
+                    >
+                      {utterance.transcript}
                     </Text>
                   </View>
-                  <Text style={[styles.utteranceText, { color: colors.text }]}>
-                    {utterance.transcript}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {!isUtterances && recordingDetails.transcript && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript</Text>
-              <View style={[styles.card, { backgroundColor: colors.card }]}>
-                <Text style={[styles.sectionContent, { color: colors.text }]}>
-                  {recordingDetails.transcript}
-                </Text>
+                ))}
               </View>
-            </View>
-          )}
+            )}
+          
         </ScrollView>
         <View style={[styles.playerContainer, { backgroundColor: colors.card }]}>
         <TouchableOpacity onPress={playRecording}>
@@ -289,141 +329,88 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
 }
 
 const styles = StyleSheet.create({
-  playerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  progressContainer: {
-    flex: 1,
-    marginTop: 16,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progress: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  timeText: {
-    fontSize: 12,
-  },
-  utteranceCard: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  utteranceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  speakerText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  timeText: {
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  utteranceText: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
   container: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     padding: 16,
   },
   headerSection: {
     marginBottom: 24,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+    fontSize: 28,
+    fontWeight: "600",
+    marginBottom: 12,
   },
   metadataContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  timeIcon: {
-    marginHorizontal: 4,
+    flexDirection: "row",
+    alignItems: "center",
   },
   dateTimeContainer: {
     flex: 1,
   },
-  dateTime: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2,
+  metadata: {
+    fontSize: 13,
   },
   durationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  timeIcon: {
+    marginHorizontal: 4,
   },
   duration: {
-    fontSize: 16,
+    fontSize: 13,
     marginLeft: 4,
-    fontWeight: '500',
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
   },
   card: {
     padding: 16,
     borderRadius: 12,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 3,
+    elevation: 3,
   },
   sectionContent: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  utteranceHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  speakerText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  timeText: {
+    fontSize: 13,
+  },
+  utteranceText: {
     fontSize: 16,
     lineHeight: 24,
   },

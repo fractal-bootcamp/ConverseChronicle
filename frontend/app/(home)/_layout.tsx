@@ -44,16 +44,6 @@ export default function HomeLayout() {
           ),
         }}
       />
-      {/* editor screen here */}
-      <Tabs.Screen
-        name="editor"
-        options={{
-          title: "Notes",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="create" size={24} color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }
