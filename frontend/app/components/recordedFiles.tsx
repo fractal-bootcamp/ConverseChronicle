@@ -15,6 +15,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import LottieView from "lottie-react-native";
+import { themeColors } from "../colors";
 
 // interface for the audio file
 interface Recording {
@@ -24,18 +25,6 @@ interface Recording {
   duration?: number;
   topics?: string[]; // todo: display this under title ?
 }
-
-// Update themeColors to match AudioRecorder
-const themeColors = {
-  primary: "#007AFF",
-  secondary: "#2C3E50",
-  accent: "#E67E22",
-  background: "rgba(18, 18, 18, 0.95)",
-  surface: "rgba(30, 30, 30, 0.8)",
-  border: "rgba(255, 255, 255, 0.15)",
-  text: "#FFFFFF",
-  textSecondary: "rgba(255, 255, 255, 0.7)",
-};
 
 export function RecordedFiles() {
   const { getToken } = useAuth();

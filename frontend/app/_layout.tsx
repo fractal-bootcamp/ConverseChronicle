@@ -10,12 +10,7 @@ import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import LottieView from "lottie-react-native";
-
-const themeColors = {
-  matteBlue: "#2C3E50",
-  lightBlue: "#007AFF",
-  white: "#FFFFFF",
-};
+import { themeColors } from "./colors";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -82,17 +77,17 @@ function RootLayoutNav() {
               </TouchableOpacity>
             )
           : undefined,
-        headerStyle: {
-          backgroundColor: themeColors.matteBlue,
-        },
+        // headerStyle: {
+        //   backgroundColor: themeColors.matteBlue,
+        // },
         headerTintColor: themeColors.white,
         contentStyle: {
-          backgroundColor: themeColors.matteBlue,
+          backgroundColor: themeColors.background,
           padding: 0,
         },
         screenOrientation: "portrait",
         animation: "fade",
-        presentation: "modal",
+        //presentation: "modal",
       }}
     >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -103,7 +98,7 @@ function RootLayoutNav() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: themeColors.matteBlue,
+    backgroundColor: themeColors.background,
     margin: 0,
     padding: 0,
   },

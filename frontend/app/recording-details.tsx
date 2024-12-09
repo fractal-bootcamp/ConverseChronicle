@@ -18,6 +18,7 @@ export default function RecordingDetailsPage() {
           title: '',
           headerShown: true,
           headerBackTitle: 'back',
+          headerTintColor: "black",
         }} 
       />
       <View style={styles.container}>
@@ -29,8 +30,7 @@ export default function RecordingDetailsPage() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    flex: 1
   },
   title: {
     fontSize: 24,
