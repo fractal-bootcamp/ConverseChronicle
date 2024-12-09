@@ -9,11 +9,6 @@ dotenv.config();
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
 const deepgram = createClient(deepgramApiKey);
 
-// using speechmatics
-const speechmaticsApiKey = process.env.SPEECHMATICS_API_KEY;
-if (!speechmaticsApiKey) throw new Error("SPEECHMATICS_API_KEY is not set");
-const speechmaticsClient = new BatchClient({apiKey: speechmaticsApiKey, appId: "converse-chronicle"});
-
 export const transcribeUrl = async (url: string) => {
   const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(
     { url: url },
@@ -34,7 +29,13 @@ export const transcribeUrl = async (url: string) => {
   return processResult(result);
 };
 
+// using speechmatics
+
 export const transcribeSpeechmatics = async (file: Buffer) => {
+  const speechmaticsApiKey = process.env.SPEECHMATICS_API_KEY;
+  if (!speechmaticsApiKey) throw new Error("SPEECHMATICS_API_KEY is not set");
+  const speechmaticsClient = new BatchClient({apiKey: speechmaticsApiKey, appId: "converse-chronicle"});
+
   const blob = new Blob([file], { type: 'audio/m4a' });
   const input = {
     data: blob,
