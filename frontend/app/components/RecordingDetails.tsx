@@ -14,6 +14,7 @@ import { ENV } from "../config";
 import { Audio } from 'expo-av';
 import { TouchableOpacity } from 'react-native';
 import * as FileSystem from "expo-file-system";
+import { themeColors } from "../colors";
 interface Utterance {
   id: string;
   speaker: string;
@@ -194,23 +195,23 @@ export default function RecordingDetails({
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
-          <Text style={[styles.errorText, { color: colors.text }]}>
+          <Text style={[styles.errorText]}>
             {error}
           </Text>
         </View>
       ) : recordingDetails ? (
         <>
           <ScrollView
-            style={[styles.container, { backgroundColor: colors.background }]}
+            style={[styles.container]}
           >
             {/* Header Section */}
             <View style={styles.headerSection}>
-              <Text style={[styles.title, { color: colors.text }]}>
+              <Text style={[styles.title]}>
                 {recordingDetails.title}
               </Text>
               <View style={styles.metadataContainer}>
                 <View style={styles.dateTimeContainer}>
-                  <Text style={[styles.metadata, { color: colors.text + "80" }]}>
+                  <Text style={[styles.metadata]}>
                     {formatDate(recordingDetails.createdAt)}
                   </Text>
                 </View>
@@ -221,7 +222,7 @@ export default function RecordingDetails({
                     color={colors.text + "80"}
                     style={styles.timeIcon}
                   />
-                  <Text style={[styles.duration, { color: colors.text + "80" }]}>
+                  <Text style={[styles.duration]}>
                     {formatDuration(recordingDetails.duration)}
                   </Text>
                 </View>
@@ -231,20 +232,20 @@ export default function RecordingDetails({
             {/* Summary Section */}
             {recordingDetails.summary && (
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                <Text style={[styles.sectionTitle]}>
                   Summary
                 </Text>
                 <View
                   style={[
                     styles.card,
                     {
-                      backgroundColor: colors.card,
+                      //backgroundColor: colors.card,
                       borderColor: colors.border,
                       borderWidth: 1,
                     },
                   ]}
                 >
-                  <Text style={[styles.sectionContent, { color: colors.text }]}>
+                  <Text style={[styles.sectionContent]}>
                     {recordingDetails.summary}
                   </Text>
                 </View>
@@ -255,7 +256,7 @@ export default function RecordingDetails({
             {recordingDetails.utterances &&
               recordingDetails.utterances.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  <Text style={[styles.sectionTitle]}>
                     Conversation
                   </Text>
                   {recordingDetails.utterances.map((utterance, index) => (
@@ -264,7 +265,7 @@ export default function RecordingDetails({
                       style={[
                         styles.card,
                         {
-                          backgroundColor: colors.card,
+                          //backgroundColor: colors.card,
                           borderColor: colors.border,
                           borderWidth: 1,
                         },
@@ -272,18 +273,18 @@ export default function RecordingDetails({
                     >
                       <View style={styles.utteranceHeader}>
                         <Text
-                          style={[styles.speakerText, { color: colors.text }]}
+                          style={[styles.speakerText]}
                         >
                           Speaker {utterance.speaker}
                         </Text>
                         <Text
-                          style={[styles.timeText, { color: colors.text + "80" }]}
+                          style={[styles.timeText]}
                         >
                           {formatDuration(utterance.start)}
                         </Text>
                       </View>
                       <Text
-                        style={[styles.utteranceText, { color: colors.text }]}
+                        style={[styles.utteranceText]}
                       >
                         {utterance.transcript}
                       </Text>
@@ -293,12 +294,12 @@ export default function RecordingDetails({
               )}
 
           </ScrollView>
-          <View style={[styles.playerContainer, { backgroundColor: colors.card }]}>
+          <View style={[styles.playerContainer]}>
             <TouchableOpacity onPress={playRecording}>
               <Ionicons
                 name={isLoadingAudio ? "hourglass-outline" : isPlaying ? "pause-circle" : "play-circle"}
                 size={48}
-                color={colors.primary}
+                color={themeColors.text}
               />
             </TouchableOpacity>
             <View style={styles.progressContainer}>
@@ -314,10 +315,10 @@ export default function RecordingDetails({
                 />
               </View>
               <View style={styles.timeContainer}>
-                <Text style={[styles.timeText, { color: colors.text }]}>
+                <Text style={[styles.timeText]}>
                   {formatTime(position)}
                 </Text>
-                <Text style={[styles.timeText, { color: colors.text }]}>
+                <Text style={[styles.timeText]}>
                   {formatTime(duration)}
                 </Text>
               </View>
@@ -331,12 +332,13 @@ export default function RecordingDetails({
 
 const styles = StyleSheet.create({
   playerContainer: {
+    backgroundColor: themeColors.background,
+    color: themeColors.text,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
     padding: 16,
     marginBottom: 24,
-    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -364,20 +366,24 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 12,
+    color: themeColors.text,
   },
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: themeColors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: themeColors.background,
   },
   errorText: {
     fontSize: 16,
     textAlign: "center",
     padding: 16,
+    color: themeColors.text,
   },
   headerSection: {
     marginBottom: 24,
@@ -386,6 +392,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "600",
     marginBottom: 12,
+    color: themeColors.text,
   },
   metadataContainer: {
     flexDirection: "row",
@@ -396,6 +403,7 @@ const styles = StyleSheet.create({
   },
   metadata: {
     fontSize: 13,
+    color: themeColors.textSecondary,
   },
   durationContainer: {
     flexDirection: "row",
@@ -407,6 +415,7 @@ const styles = StyleSheet.create({
   duration: {
     fontSize: 13,
     marginLeft: 4,
+    color: themeColors.textSecondary,
   },
   section: {
     marginBottom: 24,
@@ -415,6 +424,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     marginBottom: 12,
+    color: themeColors.text,
   },
   card: {
     padding: 16,
@@ -432,6 +442,7 @@ const styles = StyleSheet.create({
   sectionContent: {
     fontSize: 16,
     lineHeight: 24,
+    color: themeColors.text,
   },
   utteranceHeader: {
     flexDirection: "row",
@@ -442,12 +453,11 @@ const styles = StyleSheet.create({
   speakerText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  timeText: {
-    fontSize: 13,
+    color: themeColors.text,
   },
   utteranceText: {
     fontSize: 16,
     lineHeight: 24,
+    color: themeColors.text,
   },
 });

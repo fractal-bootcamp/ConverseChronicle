@@ -8,6 +8,7 @@ import {
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { themeColors } from "../colors";
 
 interface AppHeaderProps {
   style?: ViewStyle;
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     padding: 2,
+    backgroundColor: themeColors.background,
   },
   button: {
     padding: 12,
