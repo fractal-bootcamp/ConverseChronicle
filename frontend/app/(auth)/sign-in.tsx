@@ -7,14 +7,21 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  TouchableOpacity,
 } from "react-native";
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter, Link } from "expo-router";
 import LottieView from "lottie-react-native";
-// import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useTheme } from "@react-navigation/native";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
+const themeColors = {
+  lightBlue: "#007AFF",
+  borderColor: "rgba(255, 255, 255, 0.3)",
+  white: "#FFFFFF",
+  background: "#E6F3FF",
+  matteBlue: "#2C3E50",
+  inputBackground: "rgba(255, 255, 255, 0.1)",
+};
 
 export default function SignInScreen() {
   const { signIn, setActive } = useSignIn();
@@ -22,7 +29,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState("jakezegil@gmail.com");
   const [password, setPassword] = useState("iamcece1!");
   const [error, setError] = useState("");
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.5);
 
@@ -67,39 +74,36 @@ export default function SignInScreen() {
         loop
         style={styles.backgroundAnimation}
       />
-      <View style={styles.formContainer}>
+      <View
+        style={[
+          styles.formContainer,
+          { backgroundColor: themeColors.matteBlue },
+        ]}
+      >
         <TextInput
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
-          style={[styles.input, { color: Colors[colorScheme].text }]}
-          placeholderTextColor={Colors[colorScheme].text}
+          style={styles.input}
+          placeholderTextColor="rgba(255, 255, 255, 0.6)"
         />
         <TextInput
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={[styles.input, { color: Colors[colorScheme].text }]}
-          placeholderTextColor={Colors[colorScheme].text}
+          style={styles.input}
+          placeholderTextColor="rgba(255, 255, 255, 0.6)"
         />
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button
-          title="Sign In"
-          onPress={onSignInPress}
-          color={Colors[colorScheme].tint}
-        />
+        <TouchableOpacity style={styles.button} onPress={onSignInPress}>
+          <Text style={styles.buttonText}>Sign In</Text>
+        </TouchableOpacity>
         <View style={styles.signUpContainer}>
-          <Text style={{ color: Colors[colorScheme].text }}>
-            Don't have an account?
-          </Text>
+          <Text style={styles.text}>Don't have an account?</Text>
           <Link href="/sign-up">
-            <Text
-              style={[styles.signUpLink, { color: Colors[colorScheme].tint }]}
-            >
-              Sign Up
-            </Text>
+            <Text style={styles.signUpLink}>Sign Up</Text>
           </Link>
         </View>
       </View>
@@ -112,6 +116,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: themeColors.matteBlue,
   },
   backgroundAnimation: {
     position: "absolute",
@@ -120,24 +125,65 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: "80%",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
     padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: themeColors.borderColor,
+    shadowColor: themeColors.white,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  input: {
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: themeColors.borderColor,
+    backgroundColor: themeColors.inputBackground,
+    color: themeColors.white,
+    minWidth: 100,
+    shadowColor: themeColors.white,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 5,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
+  button: {
     padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
+    backgroundColor: themeColors.lightBlue,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: themeColors.borderColor,
+    minWidth: 100,
+    alignItems: "center",
+    shadowColor: themeColors.white,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonText: {
+    color: themeColors.white,
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1,
+  },
+  text: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1,
+    color: themeColors.white,
   },
   errorText: {
     color: "red",
@@ -149,6 +195,8 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     marginTop: 5,
-    fontWeight: "bold",
+    fontWeight: "600",
+    letterSpacing: 1,
+    color: themeColors.lightBlue,
   },
 });

@@ -39,7 +39,7 @@ export const createRecording = async(req: CreateRequest) => {
                     topic: topic
                 }))
             } : {},
-            duration: 60 // todo: calculate duration 
+            duration: 60, // todo: calculate duration,
         }
     });
     console.log(`Created recording in db successfully`);
@@ -81,6 +81,7 @@ export const listRecordings = async(req: ListRequest) => {
             title: true,
             topics: true,
             createdAt: true,
+            updatedAt: true,
             duration: true
         }
     });
