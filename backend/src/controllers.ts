@@ -4,11 +4,22 @@ import { downloadFile, generatePresignedUrl, uploadBuffer } from './apis/supabas
 import { v4 as uuid } from 'uuid';
 import { BUCKET_NAME, FILE_EXTENSION } from './constant';
 import { transcribeFile, transcribeSpeechmatics } from './apis/transcribe';
+import { getAudioDurationInSeconds } from 'get-audio-duration';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 const prisma = new PrismaClient();
 
 export const createRecording = async(req: CreateRequest) => {
     const {userId, recordingBody} = req;
+    
+    // Get audio duration from buffer using system temp directory
+    const tempFilePath = join(tmpdir(), `${uuid()}${FILE_EXTENSION}`);
+    await require('fs').promises.writeFile(tempFilePath, recordingBody);
+    const durationInSeconds = Math.round(await getAudioDurationInSeconds(tempFilePath));
+    console.log(`durationInSeconds: `, durationInSeconds);
+    await require('fs').promises.unlink(tempFilePath); // Clean up temp file
+    
     // Get the full conversation object with speaker information
     const {conversation, summary, title} = await transcribeSpeechmatics(recordingBody!);
     
@@ -39,7 +50,7 @@ export const createRecording = async(req: CreateRequest) => {
                     topic: topic
                 }))
             } : {},
-            duration: 60, // todo: calculate duration,
+            duration: durationInSeconds
         }
     });
     console.log(`Created recording in db successfully`);
