@@ -23,6 +23,7 @@ const upload = multer({ storage });
 // list recordings
 app.get('/recordings', requireAuth(), async (req: Request, res: Response): Promise<any> => {
   const {userId} = getAuth(req);
+  console.log(`userId: `, userId);
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
