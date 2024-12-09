@@ -23,7 +23,6 @@ interface RecordingDetailsData {
   summary?: string;
   transcript?: string;
   utterances?: Utterance[];
-  recording?: Blob;
   recordingUrl: string;
 }
 
@@ -86,7 +85,6 @@ export default function RecordingDetails({recordingId}: { recordingId: string })
         (status) => {
           // Update position and duration when playback status changes
           if (status.isLoaded) {
-            console.log(`position`, status.positionMillis);
             setPosition(status.positionMillis);
             setDuration(status.durationMillis || 0);
           }
