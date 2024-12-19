@@ -5,9 +5,9 @@ ConverseChronicle is a React Native mobile application that enables users to rec
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="public/screenshots/recording.png" alt="Recording Screen" width="250" />
-  <img src="public/screenshots/details.png" alt="Details Screen" width="250" />
-  <img src="public/screenshots/home.png" alt="Home Screen" width="250" />
+  <img src="./frontend/assets/screenshots/cc-record.png" alt="Recording Screen" width="250" />
+  <img src="./frontend/assets/screenshots/cc-list.png" alt="List Recordings" width="250" />
+  <img src="./frontend/assets/screenshots/cc-summary.png" alt="Summary Screen" width="250" />
 </div>
 
 ## 🌟 Overview
