@@ -1,50 +1,142 @@
-# Welcome to your Expo app 👋
+# ConverseChronicle Frontend
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile application for recording, transcribing, and managing conversations with an intuitive user interface and real-time audio visualization.
 
-## Get started
+## ✨ Features
 
-1. Install dependencies
+- Real-time audio recording with waveform visualization
+- Secure user authentication
+- Conversation management and playback
+- Interactive transcription viewer
+- Dark mode support
+- Gesture-based interactions
+- Pull-to-refresh functionality
 
-   ```bash
-   npm install
-   ```
+## 🛠️ Tech Stack
 
-2. Start the app
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router
+- **Authentication**: Clerk
+- **Animations**: Lottie
+- **Styling**: React Native StyleSheet
+- **Gestures**: React Native Gesture Handler
+- **Audio**: Expo AV
 
-   ```bash
-    npx expo start
-   ```
+## 📋 Prerequisites
 
-In the output, you'll find options to open the app in a
+- Node.js (v16+)
+- Expo CLI
+- iOS Simulator or Android Emulator
+- npm or yarn
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🔧 Installation
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Clone the repository
 
 ```bash
-npm run reset-project
+git clone <repository-url>
+cd frontend
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. Set up environment variables
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+# Create a .env file with:
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_key
+```
 
-## Join the community
+## 🚀 Running the Application
 
-Join our community of developers creating universal apps.
+### Development
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx expo start
+```
+
+Then press:
+
+- `i` for iOS simulator
+- `a` for Android emulator
+- Scan QR code with Expo Go app for physical device
+
+## 📱 Screens
+
+- **Authentication**
+  - Sign In
+  - Sign Up
+  - Email Verification
+- **Main**
+  - Recording Screen
+  - Recordings List
+  - Recording Details
+
+## 📁 Project Structure
+
+```
+frontend/
+├── app/
+│   ├── (auth)/        # Authentication screens
+│   ├── (home)/        # Main app screens
+│   ├── components/    # Reusable components
+│   │   ├── audio/     # Audio-related components
+│   │   └── ...
+│   └── config.ts      # App configuration
+├── assets/
+│   ├── animations/    # Lottie animation files
+│   ├── fonts/        # Custom fonts
+│   └── images/       # App images
+└── types/            # TypeScript definitions
+```
+
+## 🎨 Components
+
+### Key Components
+
+- **AudioRecorder**: Records audio with real-time waveform visualization
+- **AudioWaveform**: Displays audio waveform and metrics
+- **RecordedFiles**: Manages and displays recorded conversations
+- **RecordingDetails**: Shows detailed view of recordings with playback
+
+## 🔒 Authentication
+
+The app uses Clerk for authentication with features including:
+
+- Email/password authentication
+- Session management
+- Protected routes
+- Secure token handling
+
+## 📱 Screen Navigation
+
+The app uses Expo Router for file-based routing:
+
+- `/(auth)/*` - Authentication routes
+- `/(home)/*` - Main app routes
+- `recording-details` - Dynamic route for recording details
+
+## 🎯 Best Practices
+
+- TypeScript for type safety
+- Component composition for reusability
+- Consistent styling patterns
+- Error handling and loading states
+- Responsive design
+- Performance optimization
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the ISC License.
