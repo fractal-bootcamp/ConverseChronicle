@@ -2,6 +2,14 @@
 
 A React Native mobile application for recording, transcribing, and managing conversations with an intuitive user interface and real-time audio visualization.
 
+## 📱 Screenshots
+
+<div align="center">
+  <img src="public/screenshots/recording.png" alt="Recording Screen" width="250" />
+  <img src="public/screenshots/details.png" alt="Details Screen" width="250" />
+  <img src="public/screenshots/home.png" alt="Home Screen" width="250" />
+</div>
+
 ## ✨ Features
 
 - Real-time audio recording with waveform visualization

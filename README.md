@@ -2,6 +2,14 @@
 
 ConverseChronicle is a React Native mobile application that enables users to record, transcribe, and analyze conversations with AI-powered insights. The application features real-time audio visualization, smart transcription, and conversation summarization.
 
+## 📱 Screenshots
+
+<div align="center">
+  <img src="public/screenshots/recording.png" alt="Recording Screen" width="250" />
+  <img src="public/screenshots/details.png" alt="Details Screen" width="250" />
+  <img src="public/screenshots/home.png" alt="Home Screen" width="250" />
+</div>
+
 ## 🌟 Overview
 
 The project consists of two main components:
