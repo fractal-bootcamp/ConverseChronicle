@@ -83,6 +83,6 @@ This project is licensed under the ISC License.
 
 ## 👥 Team
 
-- [@kmankan](https://github.com/mahlen) - Mahlen
 - [@chelsea-zhou](https://github.com/chelsea-zhou) - Chelsea
 - [@cecepizza](https://github.com/cepiz) - Cece
+- [@kmankan](https://github.com/mahlen) - Mahlen
